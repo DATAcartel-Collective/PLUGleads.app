@@ -1,0 +1,65 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand-cyan: #06b6d4;
+  --color-brand-cyan-glow: rgba(6, 182, 212, 0.2);
+  --color-brand-zinc: #09090b;
+  --color-brand-card: #10101a;
+  --color-brand-border: #27272a;
+  --color-storm-purple: #5b21b6;
+}
+
+:root {
+  background-color: #09090b;
+  color: #ffffff;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background-color: #09090b;
+  background-image:
+    linear-gradient(rgba(6, 182, 212, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(6, 182, 212, 0.05) 1px, transparent 1px);
+  background-size: 30px 30px;
+  overflow-x: hidden;
+}
+
+/* Roofer UI Textures & Effects */
+.texture-plywood {
+  background-color: #27272a;
+  background-image: repeating-linear-gradient(45deg, #18181b 25%, transparent 25%, transparent 75%, #18181b 75%, #18181b), repeating-linear-gradient(45deg, #18181b 25%, #27272a 25%, #27272a 75%, #18181b 75%, #18181b);
+  background-position: 0 0, 10px 10px;
+  background-size: 20px 20px;
+}
+
+@keyframes storm-flash {
+  0%, 100% { background-color: transparent; }
+  10%, 12% { background-color: rgba(91, 33, 182, 0.4); }
+  14%, 16% { background-color: rgba(139, 92, 246, 0.6); }
+}
+
+.animate-storm-front {
+  animation: storm-flash 6s infinite;
+}
+
+.glass-panel {
+  background: rgba(16, 16, 26, 0.8);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(6, 182, 212, 0.15);
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #09090b;
+}
+::-webkit-scrollbar-thumb {
+  background: #27272a;
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #06b6d4;
+}

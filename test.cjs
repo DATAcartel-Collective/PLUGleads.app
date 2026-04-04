@@ -1,0 +1,3 @@
+const { createClient } = require('@supabase/supabase-js');
+const s = createClient('https://ylmsomkljcqcjpztslug.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlsbXNvbWtsamNxY2pwdHpzbHVnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTEwOTI1MjcsImV4cCI6MjAyNjg2MDUyN30.sb_publishable_cUd8snCxGcpaws7pRWgU2Q_VpaQb-jV');
+s.from('leads').select('ai_scored_at').limit(1).then(x => console.log(JSON.stringify(x)));
