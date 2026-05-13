@@ -758,7 +758,13 @@ export default function IngestView() {
               <div key={i} data-testid="log-skeleton" className="animate-pulse bg-zinc-800 rounded h-4 w-full"></div>
             ))
           ) : ingestionLog.length === 0 ? (
-            <div className="text-center text-zinc-500 py-4">NO LEADS INGESTED YET</div>
+            <div className="flex flex-col items-center justify-center py-8 text-zinc-500">
+                <svg className="w-12 h-12 text-zinc-600 mb-3" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 22V12h6v10" />
+                </svg>
+                <span className="font-mono font-bold text-sm uppercase">NO LEADS INGESTED YET</span>
+            </div>
           ) : (
             ingestionLog.map((log, i) => (
               <div key={i} className="flex items-center justify-between bg-zinc-800/50 p-2 rounded text-sm">

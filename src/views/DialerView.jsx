@@ -41,13 +41,22 @@ export default function DialerView() {
         let interval;
         if (callState === 'IN_PROGRESS') {
             interval = setInterval(() => setCallDuration(d => d + 1), 1000);
-        } else {
+        } else if (interval) {
             clearInterval(interval);
         }
         return () => clearInterval(interval);
     }, [callState]);
 
+    const [isLoading, setIsLoading] = useState(false);
+
+    useEffect(() => {
+        if (tenantId) {
+            loadQueue();
+        }
+    }, [tenantId]);
+
     async function loadQueue() {
+        setIsLoading(true);
         const { data } = await supabase
             .from('leads')
             .select('*')
@@ -66,6 +75,7 @@ export default function DialerView() {
             setCallDuration(0);
             resetSmsState();
         }
+        setIsLoading(false);
     }
 
     const currentLead = queue[currentIndex];
@@ -319,9 +329,21 @@ export default function DialerView() {
                             </div>
 
                         </motion.div>
+                    ) : isLoading ? (
+                        <div className="absolute inset-0 flex items-center justify-center border-2 border-dashed border-zinc-800 rounded-2xl">
+                            <div className="animate-pulse flex flex-col items-center">
+                                <div className="w-16 h-16 bg-zinc-800 rounded-full mb-4"></div>
+                                <div className="h-6 w-32 bg-zinc-800 rounded mb-2"></div>
+                                <div className="h-4 w-24 bg-zinc-800 rounded"></div>
+                            </div>
+                        </div>
                     ) : (
-                        <div className="absolute inset-0 flex items-center justify-center border-2 border-dashed border-zinc-800 rounded-2xl text-zinc-500 font-bold text-xl">
-                            NO LEADS IN QUEUE
+                        <div className="absolute inset-0 flex flex-col items-center justify-center border-2 border-dashed border-zinc-800 rounded-2xl text-zinc-500">
+                            <svg className="w-16 h-16 text-zinc-600 mb-4" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M9 22V12h6v10" />
+                            </svg>
+                            <span className="font-mono font-bold text-xl">NO LEADS IN QUEUE</span>
                         </div>
                     )}
                 </AnimatePresence>

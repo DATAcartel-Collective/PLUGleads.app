@@ -296,7 +296,15 @@ export default function HailView() {
               {isFetchingEvents ? (
                 <tr><td colSpan="6" className="p-4 text-center text-zinc-500">Loading...</td></tr>
               ) : hailEvents.length === 0 ? (
-                <tr><td colSpan="6" className="p-4 text-center text-zinc-500">No storm events found.</td></tr>
+                <tr><td colSpan="6" className="p-12 text-center text-zinc-500">
+                    <div className="flex flex-col items-center justify-center">
+                        <svg className="w-16 h-16 text-zinc-600 mb-4" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 22V12h6v10" />
+                        </svg>
+                        <span className="font-mono font-bold text-xl uppercase">No storm events found.</span>
+                    </div>
+                </td></tr>
               ) : (
                 hailEvents.map((ev) => (
                   <tr key={ev.id} className="hover:bg-zinc-700/50">

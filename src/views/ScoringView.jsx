@@ -318,8 +318,15 @@ export default function ScoringView() {
 
                         {leads.length === 0 && (
                             <tr>
-                                <td colSpan="7" className="p-8 text-center text-zinc-500 font-mono">
-                                    Enter Tenant ID to load unscored leads queue.
+                                <td colSpan="7" className="p-12 text-center text-zinc-500 font-mono">
+                                    <div className="flex flex-col items-center justify-center">
+                                        <svg className="w-16 h-16 text-zinc-600 mb-4" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 22V12h6v10" />
+                                        </svg>
+                                        <span className="font-bold text-xl uppercase">NO LEADS TO SCORE</span>
+                                        <span className="text-sm mt-2">Enter Tenant ID to load unscored leads queue.</span>
+                                    </div>
                                 </td>
                             </tr>
                         )}

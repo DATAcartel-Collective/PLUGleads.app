@@ -10,6 +10,7 @@ export default function LeadsView() {
   const [skipTraceSpend, setSkipTraceSpend] = useState(0);
 
   const [leads, setLeads] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Filters and sort
   const [activeTier, setActiveTier] = useState('ALL'); // ALL, TIER 1, TIER 2, TIER 3
@@ -41,6 +42,7 @@ export default function LeadsView() {
   }, [tenantId, isLogOpen]);
 
   async function loadLeads() {
+    setIsLoading(true);
     const { data, error } = await supabase
       .from('leads')
       .select('*')
@@ -49,6 +51,7 @@ export default function LeadsView() {
     if (data) {
       setLeads(data);
     }
+    setIsLoading(false);
   }
 
   async function loadSkipTraceSpend() {
@@ -255,110 +258,142 @@ export default function LeadsView() {
 
       {/* LEAD CARDS */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-        <AnimatePresence>
-          {filteredLeads.map(lead => {
-            const isTier1 = lead.priority_status === 'Tier 1';
-            const isTier2 = lead.priority_status === 'Tier 2';
-            const borderClass = isTier1 ? 'border-green-500' : isTier2 ? 'border-yellow-500' : 'border-zinc-500';
-            const badgeClass = isTier1 ? 'bg-green-900/50 text-green-400' : isTier2 ? 'bg-yellow-900/50 text-yellow-400' : 'bg-zinc-700 text-zinc-300';
+        {isLoading ? (
+            Array.from({ length: 6 }).map((_, idx) => (
+                <div key={idx} className="bg-zinc-800/50 animate-pulse border border-zinc-700 rounded-lg p-5 h-[320px]"></div>
+            ))
+        ) : (
+            <AnimatePresence>
+            {filteredLeads.map(lead => {
+                const isTier1 = lead.priority_status === 'Tier 1';
+                const isTier2 = lead.priority_status === 'Tier 2';
+                
+                const daysLeft = lead.days_until_deadline;
+                let daysClass = 'text-green-400';
+                if (daysLeft < 30) daysClass = 'text-red-400';
+                else if (daysLeft <= 60) daysClass = 'text-yellow-400';
 
-            const daysLeft = lead.days_until_deadline;
-            let daysClass = 'text-green-400';
-            if (daysLeft < 30) daysClass = 'text-red-400';
-            else if (daysLeft <= 60) daysClass = 'text-yellow-400';
+                let borderClass = isTier1 ? 'border-l-green-500 border-zinc-700' : isTier2 ? 'border-l-yellow-500 border-zinc-700' : 'border-l-zinc-500 border-zinc-700';
+                if (daysLeft !== null && daysLeft < 7) {
+                    borderClass += ' border-red-500 animate-pulse';
+                }
 
-            return (
-              <motion.div
-                key={lead.id}
-                variants={ROOFING_PHYSICS.shingleSlide}
-                initial="initial"
-                animate="animate"
-                exit="exit"
-                className={`bg-zinc-800 border-2 ${borderClass} rounded-lg p-5 flex flex-col ${isTier1 ? 'animate-storm-front' : ''}`}
-              >
-                {/* Top: Tier Badge & Score */}
-                <div className="flex justify-between items-start mb-3">
-                  <div className="flex items-center space-x-2">
-                    <span className={`px-2 py-1 rounded text-xs font-bold ${badgeClass}`}>
-                      {lead.priority_status || 'TIER 3'}
-                    </span>
-                    {lead.skip_trace_status === 'COMPLETE' && (
-                      <span className="text-green-400 text-xs font-bold bg-green-900/30 px-2 py-1 rounded">TRACED ✓</span>
+                const ringColor = (daysLeft !== null && daysLeft < 30) ? '#f87171' : (lead.lead_score >= 75 ? '#22c55e' : lead.lead_score >= 50 ? '#eab308' : '#71717a');
+                const ringPulse = daysLeft !== null && daysLeft < 30 ? 'animate-pulse' : '';
+                
+                const badgeClass = isTier1 ? 'bg-green-900/50 text-green-400' : isTier2 ? 'bg-yellow-900/50 text-yellow-400' : 'bg-zinc-700 text-zinc-300';
+
+                return (
+                <motion.div
+                    key={lead.id}
+                    variants={ROOFING_PHYSICS.shingleSlide}
+                    initial="initial"
+                    animate="animate"
+                    exit="exit"
+                    className={`glass-panel border-y border-r border-l-4 ${borderClass} rounded-lg p-5 flex flex-col ${isTier1 ? 'animate-storm-front' : ''}`}
+                >
+                    {/* Top: Tier Badge & Score */}
+                    <div className="flex justify-between items-start mb-3">
+                    <div className="flex items-center space-x-2">
+                        <span className={`px-2 py-1 rounded text-xs font-bold ${badgeClass}`}>
+                        {lead.priority_status || 'TIER 3'}
+                        </span>
+                        {lead.skip_trace_status === 'COMPLETE' && (
+                        <span className="text-green-400 text-xs font-bold bg-green-900/30 px-2 py-1 rounded">TRACED ✓</span>
+                        )}
+                        {lead.skip_trace_status === 'FAILED' && (
+                        <span className="text-red-400 text-xs font-bold bg-red-900/30 px-2 py-1 rounded">FAILED</span>
+                        )}
+                    </div>
+                    
+                    <div className={`relative w-12 h-12 flex items-center justify-center ${ringPulse}`}>
+                        <svg className="absolute inset-0 w-full h-full transform -rotate-90">
+                            <circle cx="24" cy="24" r="20" stroke="#27272a" strokeWidth="4" fill="none" />
+                            <motion.circle 
+                                cx="24" cy="24" r="20" 
+                                stroke={ringColor} strokeWidth="4" fill="none" strokeDasharray="125.66" 
+                                initial={{ strokeDashoffset: 125.66 }}
+                                animate={{ strokeDashoffset: 125.66 - (125.66 * (lead.lead_score || 0) / 100) }}
+                                transition={{ duration: 1.5, ease: "easeOut" }}
+                            />
+                        </svg>
+                        <span className="text-lg font-bold text-white z-10">{lead.lead_score || 0}</span>
+                    </div>
+
+                    </div>
+
+                    {/* Address & Homeowner */}
+                    <div className="mb-2">
+                    <h3 className="font-bold text-lg truncate">{lead.address}</h3>
+                    <p className="text-zinc-400 text-sm truncate">{lead.homeowner_name || 'Unknown Owner'}</p>
+                    </div>
+
+                    {/* Phone Numbers Display if Traced */}
+                    {lead.skip_trace_status === 'COMPLETE' && lead.phone_numbers && lead.phone_numbers.length > 0 && (
+                    <div className="mb-2 bg-zinc-900 border border-zinc-700 p-2 rounded">
+                        {lead.phone_numbers.slice(0, 2).map((ph, idx) => (
+                        <div key={idx} className="text-xs text-zinc-300 tracking-widest">
+                            ***-***-{ph.number?.slice(-4)} <span className="text-zinc-500 ml-1">({ph.type || 'phone'})</span>
+                        </div>
+                        ))}
+                        {lead.phone_numbers.length > 2 && <div className="text-xs text-zinc-500 mt-1">+{lead.phone_numbers.length - 2} more...</div>}
+                    </div>
                     )}
-                    {lead.skip_trace_status === 'FAILED' && (
-                      <span className="text-red-400 text-xs font-bold bg-red-900/30 px-2 py-1 rounded">FAILED</span>
+
+                    {/* Archetype */}
+                    <div className="mb-2 italic text-zinc-400 text-sm">
+                    {lead.lead_archetype || 'Unclassified'}
+                    </div>
+
+                    {/* Urgency Flag */}
+                    {lead.urgency_flag && (
+                    <div className={`mb-2 text-xs font-bold ${lead.urgency_flag.includes('CRITICAL') ? 'text-red-400 animate-pulse' : 'text-yellow-400'}`}>
+                        {lead.urgency_flag}
+                    </div>
                     )}
-                  </div>
-                  <span className="text-3xl font-bold text-[#06b6d4]">{lead.lead_score || 0}</span>
-                </div>
 
-                {/* Address & Homeowner */}
-                <div className="mb-2">
-                  <h3 className="font-bold text-lg truncate">{lead.address}</h3>
-                  <p className="text-zinc-400 text-sm truncate">{lead.homeowner_name || 'Unknown Owner'}</p>
-                </div>
+                    {/* Deadline */}
+                    <div className={`mb-3 text-sm font-bold ${daysClass}`}>
+                    {daysLeft !== null && daysLeft !== undefined ? `${daysLeft} DAYS LEFT` : 'NO DEADLINE'}
+                    </div>
 
-                {/* Phone Numbers Display if Traced */}
-                {lead.skip_trace_status === 'COMPLETE' && lead.phone_numbers && lead.phone_numbers.length > 0 && (
-                  <div className="mb-2 bg-zinc-900 border border-zinc-700 p-2 rounded">
-                    {lead.phone_numbers.slice(0, 2).map((ph, idx) => (
-                      <div key={idx} className="text-xs text-zinc-300 tracking-widest">
-                        ***-***-{ph.number?.slice(-4)} <span className="text-zinc-500 ml-1">({ph.type || 'phone'})</span>
-                      </div>
-                    ))}
-                    {lead.phone_numbers.length > 2 && <div className="text-xs text-zinc-500 mt-1">+{lead.phone_numbers.length - 2} more...</div>}
-                  </div>
-                )}
+                    {/* Dynamic Pitch */}
+                    <div className="mb-4 text-[#06b6d4] text-xs italic line-clamp-2 leading-relaxed flex-grow">
+                    "{lead.dynamic_sales_pitch || 'No pitch generated.'}"
+                    </div>
 
-                {/* Archetype */}
-                <div className="mb-2 italic text-zinc-400 text-sm">
-                  {lead.lead_archetype || 'Unclassified'}
-                </div>
+                    {/* Action Buttons */}
+                    <div className="flex space-x-2 mt-auto pt-4 border-t border-zinc-700">
+                    <button
+                        disabled={!isTier1 || lead.skip_trace_status === 'IN_PROGRESS' || lead.skip_trace_status === 'COMPLETE'}
+                        onClick={() => setSkipTraceModal({ isOpen: true, lead })}
+                        className={`flex-1 py-2 rounded text-xs font-bold transition-colors ${isTier1 && lead.skip_trace_status !== 'COMPLETE' && lead.skip_trace_status !== 'IN_PROGRESS'
+                        ? 'bg-zinc-950 text-[#06b6d4] border border-[#06b6d4] hover:bg-[#06b6d4] hover:text-black'
+                        : 'bg-zinc-900 text-zinc-600 cursor-not-allowed border border-zinc-800'
+                        }`}
+                    >
+                        {lead.skip_trace_status === 'IN_PROGRESS' ? 'TRACING...' : 'SKIP TRACE'}
+                    </button>
+                    <button
+                        onClick={() => openLeadDetails(lead)}
+                        className="flex-1 bg-zinc-700 hover:bg-zinc-600 text-white py-2 rounded text-xs font-bold transition-colors"
+                    >
+                        VIEW DETAILS
+                    </button>
+                    </div>
+                </motion.div>
+                );
+            })}
+            </AnimatePresence>
+        )}
 
-                {/* Urgency Flag */}
-                {lead.urgency_flag && (
-                  <div className={`mb-2 text-xs font-bold ${lead.urgency_flag.includes('CRITICAL') ? 'text-red-400' : 'text-yellow-400'}`}>
-                    {lead.urgency_flag}
-                  </div>
-                )}
-
-                {/* Deadline */}
-                <div className={`mb-3 text-sm font-bold ${daysClass}`}>
-                  {daysLeft !== null && daysLeft !== undefined ? `${daysLeft} DAYS LEFT` : 'NO DEADLINE'}
-                </div>
-
-                {/* Dynamic Pitch */}
-                <div className="mb-4 text-[#06b6d4] text-xs italic line-clamp-2 leading-relaxed flex-grow">
-                  "{lead.dynamic_sales_pitch || 'No pitch generated.'}"
-                </div>
-
-                {/* Action Buttons */}
-                <div className="flex space-x-2 mt-auto pt-4 border-t border-zinc-700">
-                  <button
-                    disabled={!isTier1 || lead.skip_trace_status === 'IN_PROGRESS' || lead.skip_trace_status === 'COMPLETE'}
-                    onClick={() => setSkipTraceModal({ isOpen: true, lead })}
-                    className={`flex-1 py-2 rounded text-xs font-bold transition-colors ${isTier1 && lead.skip_trace_status !== 'COMPLETE' && lead.skip_trace_status !== 'IN_PROGRESS'
-                      ? 'bg-zinc-950 text-[#06b6d4] border border-[#06b6d4] hover:bg-[#06b6d4] hover:text-black'
-                      : 'bg-zinc-900 text-zinc-600 cursor-not-allowed border border-zinc-800'
-                      }`}
-                  >
-                    {lead.skip_trace_status === 'IN_PROGRESS' ? 'TRACING...' : 'SKIP TRACE'}
-                  </button>
-                  <button
-                    onClick={() => openLeadDetails(lead)}
-                    className="flex-1 bg-zinc-700 hover:bg-zinc-600 text-white py-2 rounded text-xs font-bold transition-colors"
-                  >
-                    VIEW DETAILS
-                  </button>
-                </div>
-              </motion.div>
-            );
-          })}
-        </AnimatePresence>
-
-        {filteredLeads.length === 0 && (
-          <div className="col-span-1 md:col-span-3 p-12 text-center border-2 border-dashed border-zinc-800 rounded-lg text-zinc-500">
-            NO LEADS IN PIPELINE
+        {!isLoading && filteredLeads.length === 0 && (
+          <div className="col-span-1 md:col-span-3 p-12 text-center border-2 border-dashed border-zinc-800 rounded-lg flex flex-col items-center justify-center">
+            <svg className="w-16 h-16 text-zinc-600 mb-4" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 22V12h6v10" />
+            </svg>
+            <span className="text-zinc-400 font-mono">NO LEADS SCORED YET</span>
           </div>
         )}
       </div>

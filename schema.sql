@@ -193,7 +193,7 @@ CREATE TABLE IF NOT EXISTS leads (
     visual_analysis                 JSONB,          -- full visual_analysis JSON block from Gemini
     financial_profile               TEXT,
     ai_scored_at                    TIMESTAMPTZ,
-    ai_model_version                TEXT DEFAULT 'gemini-3.1-pro',
+    ai_model_version                TEXT DEFAULT 'gemini-1.5-pro',
 
     -- ── Satellite Imagery ─────────────────────────────────
     satellite_image_current_url     TEXT,
