@@ -160,18 +160,18 @@ export default function HailView() {
   };
 
   return (
-    <div className="p-6 font-mono text-white max-w-7xl mx-auto">
+    <div className="p-4 sm:p-6 font-mono text-white max-w-7xl mx-auto">
       {/* HEADER */}
       <div className="mb-8">
-        <h1 className="text-[#06b6d4] text-2xl font-bold uppercase tracking-wider">STORM SWATH INGESTION</h1>
-        <p className="text-zinc-500 text-sm">NOAA SPC GeoJSON Pipeline</p>
+        <h1 className="page-title mb-2">STORM SWATH INGESTION</h1>
+        <p className="secondary-text">NOAA SPC GeoJSON Pipeline</p>
       </div>
 
       {/* NOAA GEOJSON FETCH PANEL */}
-      <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-6 mb-8">
-        <div className="flex flex-col md:flex-row gap-4 items-end">
-          <div className="flex-1">
-            <label className="block text-[#06b6d4] font-mono font-bold text-sm mb-2">NOAA SPC GeoJSON URL</label>
+      <div className="global-card p-4 sm:p-6 mb-8">
+        <div className="flex flex-col sm:flex-row gap-4 items-end">
+          <div className="flex-1 w-full">
+            <label className="block label-text mb-2">NOAA SPC GeoJSON URL</label>
             <input
               data-testid="noaa-url-input"
               type="text"
@@ -179,14 +179,13 @@ export default function HailView() {
               value={url}
               onChange={(e) => setUrl(e.target.value)}
               disabled={isFetching || isUploading}
-              className="w-full bg-zinc-800 border border-transparent focus:border-[#06b6d4] text-white font-mono px-3 py-2 rounded outline-none disabled:opacity-50"
+              className="w-full bg-[#18181b] border border-[#27272a] text-white focus:border-[#06b6d4] font-mono px-4 h-[44px] rounded-lg outline-none disabled:opacity-50"
             />
           </div>
-          <motion.button
-            whileTap={!isFetching && url ? ROOFING_PHYSICS.nailGunRecoil.whileTap : {}}
+          <button
             onClick={handleFetchUrl}
             disabled={isFetching || !url || isUploading}
-            className={`px-6 py-2 font-bold uppercase rounded border transition-colors duration-200 h-[42px] whitespace-nowrap
+            className={`w-full sm:w-auto px-6 h-[44px] font-bold uppercase rounded-lg border transition-colors duration-200 whitespace-nowrap font-mono text-[13px]
               ${isFetching || !url || isUploading
                 ? 'bg-zinc-800 border-zinc-600 text-zinc-400 cursor-not-allowed'
                 : 'bg-zinc-800 border-[#06b6d4] text-[#06b6d4] hover:bg-zinc-700'
@@ -194,7 +193,7 @@ export default function HailView() {
             `}
           >
             {isFetching ? 'FETCHING...' : 'FETCH SWATH DATA'}
-          </motion.button>
+          </button>
         </div>
 
         {fetchError && (
@@ -214,24 +213,23 @@ export default function HailView() {
 
       {parsedEvents.length > 0 && !uploadSuccess && (
         <div className="mb-8 mt-4">
-          <div className="mb-4 inline-block bg-zinc-900 border border-[#06b6d4] text-[#06b6d4] px-3 py-1 rounded text-sm font-bold">
+          <div className="mb-4 inline-block bg-[#27272a] text-[#06b6d4] px-4 py-2 rounded font-bold text-xs uppercase font-mono">
             {parsedEvents.length} STORM EVENTS PARSED
           </div>
 
-          <motion.button
-            whileTap={!isUploading ? ROOFING_PHYSICS.nailGunRecoil.whileTap : {}}
+          <button
             onClick={handleUpload}
             disabled={isUploading}
-            className={`w-full py-4 text-xl font-bold uppercase rounded border-2 transition-colors duration-200 flex justify-center items-center
+            className={`w-full font-bold uppercase rounded-lg border-2 transition-colors duration-200 flex justify-center items-center h-[52px] text-sm
               ${isUploading
                 ? 'bg-zinc-800 border-zinc-600 text-zinc-400 cursor-not-allowed'
-                : 'bg-zinc-800 border-[#06b6d4] text-[#06b6d4] hover:bg-zinc-700'
+                : 'gradient-btn'
               }
             `}
           >
             {isUploading ? (
               <span className="flex items-center">
-                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-[#06b6d4]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
@@ -240,10 +238,10 @@ export default function HailView() {
             ) : (
               `NAIL IT — UPLOAD SWATHS`
             )}
-          </motion.button>
+          </button>
 
           {uploadError && (
-            <div className="mt-4 bg-zinc-900 border border-red-500 rounded p-4 flex flex-col items-center">
+            <div className="mt-4 global-card p-4 flex flex-col items-center">
               <h3 className="text-red-500 font-bold text-lg mb-2">UPLOAD FAILED</h3>
               <p className="text-red-400 text-sm mb-4 text-center">{uploadError}</p>
               <button
@@ -277,22 +275,22 @@ export default function HailView() {
 
       {/* EXISTING SWATHS TABLE */}
       <div className="mb-8">
-        <div className="mb-4 inline-block bg-zinc-900 border border-zinc-700 text-zinc-300 px-3 py-1 rounded text-sm font-bold">
+        <div className="mb-4 inline-block bg-[#27272a] text-[#06b6d4] px-4 py-2 rounded font-bold text-xs uppercase font-mono">
           {hailEvents.length} STORM EVENTS ON RECORD
         </div>
-        <div className="overflow-x-auto bg-zinc-800 border border-zinc-700 rounded-lg">
-          <table data-testid="hail-events-table" className="w-full text-left text-sm">
-            <thead className="bg-zinc-900 text-[#06b6d4] border-b border-zinc-700">
+        <div className="overflow-x-auto global-card rounded-lg">
+          <table data-testid="hail-events-table" className="w-full text-left text-sm whitespace-nowrap min-w-[600px]">
+            <thead className="bg-[#10101a] text-[#06b6d4] border-b border-[#27272a]">
               <tr>
-                <th className="p-3">Date</th>
-                <th className="p-3">State</th>
-                <th className="p-3">County</th>
-                <th className="p-3">Hail Size</th>
-                <th className="p-3">Wind Speed</th>
-                <th className="p-3">Source</th>
+                <th className="p-3 font-mono">Date</th>
+                <th className="p-3 font-mono">State</th>
+                <th className="p-3 font-mono">County</th>
+                <th className="p-3 font-mono">Hail Size</th>
+                <th className="p-3 font-mono">Wind Speed</th>
+                <th className="p-3 font-mono">Source</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-zinc-700">
+            <tbody className="divide-y divide-[#27272a]">
               {isFetchingEvents ? (
                 <tr><td colSpan="6" className="p-4 text-center text-zinc-500">Loading...</td></tr>
               ) : hailEvents.length === 0 ? (
@@ -307,13 +305,13 @@ export default function HailView() {
                 </td></tr>
               ) : (
                 hailEvents.map((ev) => (
-                  <tr key={ev.id} className="hover:bg-zinc-700/50">
-                    <td className="p-3">{ev.event_date ? new Date(ev.event_date).toLocaleDateString() : 'N/A'}</td>
-                    <td className="p-3">{ev.state}</td>
-                    <td className="p-3">{ev.county}</td>
-                    <td className="p-3">{ev.hail_size_inches ? `${ev.hail_size_inches}"` : '-'}</td>
-                    <td className="p-3">{ev.wind_speed_mph ? `${ev.wind_speed_mph} mph` : '-'}</td>
-                    <td className="p-3 truncate max-w-[200px] text-zinc-400" title={ev.source_url}>{ev.source_url}</td>
+                  <tr key={ev.id} className="storm-row">
+                    <td className="p-3 font-mono">{ev.event_date ? new Date(ev.event_date).toLocaleDateString() : 'N/A'}</td>
+                    <td className="p-3 font-mono">{ev.state}</td>
+                    <td className="p-3 font-mono">{ev.county}</td>
+                    <td className="p-3 font-mono">{ev.hail_size_inches ? `${ev.hail_size_inches}"` : '-'}</td>
+                    <td className="p-3 font-mono">{ev.wind_speed_mph ? `${ev.wind_speed_mph} mph` : '-'}</td>
+                    <td className="p-3 font-mono truncate max-w-[200px] text-zinc-400" title={ev.source_url}>{ev.source_url}</td>
                   </tr>
                 ))
               )}
@@ -323,39 +321,39 @@ export default function HailView() {
       </div>
 
       {/* MANUAL ENTRY FORM */}
-      <div className="bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden">
+      <div className="global-card overflow-hidden">
         <button
           onClick={() => setIsManualExpanded(!isManualExpanded)}
-          className="w-full p-4 text-left font-bold text-[#06b6d4] hover:bg-zinc-800 transition-colors flex justify-between items-center"
+          className="w-full p-4 text-left font-bold text-[#06b6d4] hover:bg-zinc-800 transition-colors flex justify-between items-center section-header"
         >
           <span>ADD MANUAL STORM EVENT</span>
           <span>{isManualExpanded ? '−' : '+'}</span>
         </button>
 
         {isManualExpanded && (
-          <form onSubmit={handleManualSubmit} className="p-6 border-t border-zinc-800 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+          <form onSubmit={handleManualSubmit} className="p-4 sm:p-6 border-t border-[#27272a] grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
             <div>
-              <label className="block text-zinc-400 text-xs mb-1">Event Date</label>
-              <input type="date" required value={manualForm.event_date} onChange={e => setManualForm({ ...manualForm, event_date: e.target.value })} className="w-full bg-zinc-800 border border-zinc-700 text-white px-3 py-2 rounded focus:border-[#06b6d4] outline-none" />
+              <label className="block label-text mb-1">Event Date</label>
+              <input type="date" required value={manualForm.event_date} onChange={e => setManualForm({ ...manualForm, event_date: e.target.value })} className="w-full bg-[#18181b] border border-[#27272a] text-white px-4 h-[44px] rounded-lg focus:border-[#06b6d4] outline-none font-mono" />
             </div>
             <div>
-              <label className="block text-zinc-400 text-xs mb-1">State (2 chars)</label>
-              <input type="text" maxLength={2} required value={manualForm.state} onChange={e => setManualForm({ ...manualForm, state: e.target.value.toUpperCase() })} className="w-full bg-zinc-800 border border-zinc-700 text-white px-3 py-2 rounded focus:border-[#06b6d4] outline-none uppercase" />
+              <label className="block label-text mb-1">State (2 chars)</label>
+              <input type="text" maxLength={2} required value={manualForm.state} onChange={e => setManualForm({ ...manualForm, state: e.target.value.toUpperCase() })} className="w-full bg-[#18181b] border border-[#27272a] text-white px-4 h-[44px] rounded-lg focus:border-[#06b6d4] outline-none uppercase font-mono" />
             </div>
             <div>
-              <label className="block text-zinc-400 text-xs mb-1">County</label>
-              <input type="text" required value={manualForm.county} onChange={e => setManualForm({ ...manualForm, county: e.target.value })} className="w-full bg-zinc-800 border border-zinc-700 text-white px-3 py-2 rounded focus:border-[#06b6d4] outline-none" />
+              <label className="block label-text mb-1">County</label>
+              <input type="text" required value={manualForm.county} onChange={e => setManualForm({ ...manualForm, county: e.target.value })} className="w-full bg-[#18181b] border border-[#27272a] text-white px-4 h-[44px] rounded-lg focus:border-[#06b6d4] outline-none font-mono" />
             </div>
             <div>
-              <label className="block text-zinc-400 text-xs mb-1">Hail Size (in)</label>
-              <input type="number" step="0.25" value={manualForm.hail_size_inches} onChange={e => setManualForm({ ...manualForm, hail_size_inches: e.target.value })} className="w-full bg-zinc-800 border border-zinc-700 text-white px-3 py-2 rounded focus:border-[#06b6d4] outline-none" />
+              <label className="block label-text mb-1">Hail Size (in)</label>
+              <input type="number" step="0.25" value={manualForm.hail_size_inches} onChange={e => setManualForm({ ...manualForm, hail_size_inches: e.target.value })} className="w-full bg-[#18181b] border border-[#27272a] text-white px-4 h-[44px] rounded-lg focus:border-[#06b6d4] outline-none font-mono" />
             </div>
             <div>
-              <label className="block text-zinc-400 text-xs mb-1">Wind Speed (mph)</label>
-              <input type="number" value={manualForm.wind_speed_mph} onChange={e => setManualForm({ ...manualForm, wind_speed_mph: e.target.value })} className="w-full bg-zinc-800 border border-zinc-700 text-white px-3 py-2 rounded focus:border-[#06b6d4] outline-none" />
+              <label className="block label-text mb-1">Wind Speed (mph)</label>
+              <input type="number" value={manualForm.wind_speed_mph} onChange={e => setManualForm({ ...manualForm, wind_speed_mph: e.target.value })} className="w-full bg-[#18181b] border border-[#27272a] text-white px-4 h-[44px] rounded-lg focus:border-[#06b6d4] outline-none font-mono" />
             </div>
             <div className="lg:col-span-5 flex justify-end mt-2">
-              <button type="submit" className="bg-zinc-800 border border-[#06b6d4] text-[#06b6d4] px-6 py-2 rounded font-bold hover:bg-zinc-700 transition-colors">
+              <button type="submit" className="w-full sm:w-auto bg-zinc-800 border border-[#06b6d4] text-[#06b6d4] px-6 py-2 rounded-lg font-bold hover:bg-zinc-700 transition-colors h-[44px] font-mono text-[13px]">
                 ADD EVENT
               </button>
             </div>

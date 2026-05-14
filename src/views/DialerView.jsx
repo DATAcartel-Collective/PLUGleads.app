@@ -110,9 +110,12 @@ export default function DialerView() {
     };
 
     const handleDragEnd = (e, info) => {
-        if (info.offset.x > 100) {
-            handleNext();
-        } else if (info.offset.x < -100) {
+        if (info.offset.x > 100 && callState === 'IDLE') {
+            // Swipe Right -> Initiate Call
+            initiateCall();
+            x.set(0); // Snap card back to center immediately so it stays put during the call
+        } else if (info.offset.x < -100 && callState === 'IDLE') {
+            // Swipe Left -> Skip to Next
             handleNext();
         }
     };
@@ -215,7 +218,7 @@ export default function DialerView() {
             {/* HEADER */}
             <div className="mb-8 border-b border-zinc-800 pb-4 w-full max-w-2xl text-center">
                 <h1 className="text-3xl font-bold text-[#06b6d4]">DIALER — LEAD EXECUTION</h1>
-                <p className="text-zinc-400 text-sm mt-2">SignalWire Proxy — Numbers hidden. Calls recorded.</p>
+                <p className="text-zinc-400 text-sm mt-2">Swipe Right to Call • Swipe Left to Skip</p>
             </div>
 
             <div className="mb-6 w-full max-w-sm flex flex-col space-y-4">
@@ -283,13 +286,13 @@ export default function DialerView() {
                                 style={{ opacity: overlayOpacityRight }}
                                 className="absolute inset-0 bg-green-500/80 z-10 flex justify-center items-center pointer-events-none"
                             >
-                                <span className="text-white font-bold text-2xl rotate-12 drop-shadow-md">CALLED — MOVE TO NEXT</span>
+                                <span className="text-white font-bold text-2xl rotate-12 drop-shadow-md">CALL LEAD</span>
                             </motion.div>
                             <motion.div
                                 style={{ opacity: overlayOpacityLeft }}
                                 className="absolute inset-0 bg-red-500/80 z-10 flex justify-center items-center pointer-events-none"
                             >
-                                <span className="text-white font-bold text-2xl -rotate-12 drop-shadow-md">SKIP — COME BACK LATER</span>
+                                <span className="text-white font-bold text-2xl -rotate-12 drop-shadow-md">SKIP</span>
                             </motion.div>
 
                             {/* Top Section */}

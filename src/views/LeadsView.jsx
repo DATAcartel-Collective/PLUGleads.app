@@ -29,17 +29,12 @@ export default function LeadsView() {
 
   const [skipTraceModal, setSkipTraceModal] = useState({ isOpen: false, lead: null });
 
-  // Audit Log
-  const [isLogOpen, setIsLogOpen] = useState(false);
-  const [auditLogs, setAuditLogs] = useState([]);
-
   useEffect(() => {
     if (tenantId) {
       loadLeads();
       loadSkipTraceSpend();
-      if (isLogOpen) loadAuditLogs();
     }
-  }, [tenantId, isLogOpen]);
+  }, [tenantId]);
 
   async function loadLeads() {
     setIsLoading(true);
@@ -62,16 +57,7 @@ export default function LeadsView() {
     }
   }
 
-  async function loadAuditLogs() {
-    const { data } = await supabase.from('skip_trace_requests')
-      .select('requested_at, completed_at, cost_per_hit, result_count, lead_id, leads(address)')
-      .eq('tenant_id', tenantId)
-      .order('requested_at', { ascending: false })
-      .limit(50);
-    if (data) {
-      setAuditLogs(data);
-    }
-  }
+
 
   async function confirmSkipTrace() {
     const lead = skipTraceModal.lead;
@@ -112,9 +98,8 @@ export default function LeadsView() {
       } : l));
 
       loadSkipTraceSpend();
-      if (isLogOpen) loadAuditLogs();
 
-    } catch (error) {
+    } catch (err) {
       await supabase.from('leads').update({ skip_trace_status: 'FAILED' }).eq('id', lead.id);
       setLeads(prev => prev.map(l => l.id === lead.id ? { ...l, skip_trace_status: 'FAILED' } : l));
     }
@@ -184,11 +169,11 @@ export default function LeadsView() {
   });
 
   return (
-    <div className="p-6 pb-32 font-mono text-white min-h-screen">
+    <div className="p-4 sm:p-6 pb-32 font-mono text-white min-h-screen max-w-7xl mx-auto">
       {/* HEADER */}
       <div className="mb-8 border-b border-zinc-800 pb-4">
-        <h1 className="text-3xl font-bold text-[#06b6d4]">LEADS DASHBOARD</h1>
-        <p className="text-zinc-400 text-sm">AI-Scored & Tiered Roofing Prospects</p>
+        <h1 className="page-title">LEADS DASHBOARD</h1>
+        <p className="secondary-text">AI-Scored & Tiered Roofing Prospects</p>
       </div>
 
       {/* CONFIGURATION INPUTS */}
@@ -199,31 +184,31 @@ export default function LeadsView() {
           value={tenantId}
           onChange={(e) => setTenantId(e.target.value)}
           data-testid="leads-tenant-input"
-          className="w-full md:w-1/3 bg-zinc-900 border border-zinc-700 text-white p-2 rounded text-sm focus:border-[#06b6d4] outline-none"
+          className="w-full md:w-1/3 bg-[#18181b] border border-[#27272a] text-white px-4 h-[44px] rounded-lg text-[13px] focus:border-[#06b6d4] outline-none font-mono"
         />
         <div className="flex flex-col md:w-1/3">
-          <label className="text-xs text-zinc-400 mb-1">BATCHLEADS API KEY</label>
+          <label className="label-text mb-1">BATCHLEADS API KEY</label>
           <input
             type="password"
             placeholder="Batchleads API Key"
             value={batchleadsApiKey}
             onChange={(e) => setBatchleadsApiKey(e.target.value)}
             data-testid="batchleads-api-input"
-            className="w-full bg-zinc-900 border border-zinc-700 text-white p-2 rounded text-sm focus:border-[#06b6d4] outline-none"
+            className="w-full bg-[#18181b] border border-[#27272a] text-white px-4 h-[44px] rounded-lg text-[13px] focus:border-[#06b6d4] outline-none font-mono"
           />
         </div>
       </div>
 
       {/* FILTER BAR */}
       <div className="flex flex-col lg:flex-row gap-4 mb-8 items-center justify-between" data-testid="leads-filter-bar">
-        <div className="flex space-x-2">
+        <div className="flex space-x-2 overflow-x-auto w-full lg:w-auto pb-2 lg:pb-0">
           {['ALL', 'TIER 1', 'TIER 2', 'TIER 3'].map(tier => (
             <button
               key={tier}
               onClick={() => setActiveTier(tier)}
-              className={`px-4 py-1.5 rounded text-sm font-bold border transition-colors ${activeTier === tier
-                ? 'bg-[#06b6d4] text-zinc-950 border-[#06b6d4]'
-                : 'bg-zinc-900 text-zinc-400 border-zinc-700 hover:bg-zinc-800'
+              className={`px-4 h-[36px] rounded text-[11px] whitespace-nowrap font-bold border transition-colors ${activeTier === tier
+                ? 'bg-[#06b6d4] text-[#09090b] border-[#06b6d4]'
+                : 'bg-[#18181b] text-zinc-400 border-[#27272a] hover:bg-zinc-800'
                 }`}
             >
               {tier}
@@ -232,14 +217,14 @@ export default function LeadsView() {
         </div>
 
         <div className="flex flex-col md:flex-row gap-4 w-full lg:w-auto items-center">
-          <div data-testid="skip-trace-spend" className="text-green-400 text-sm font-bold border border-green-500/30 bg-green-900/20 px-3 py-1.5 rounded mr-4">
+          <div data-testid="skip-trace-spend" className="text-green-400 text-[11px] font-bold border border-green-500/30 bg-green-900/20 px-3 h-[36px] flex items-center rounded w-full md:w-auto justify-center">
             SKIP TRACE SPEND: ${skipTraceSpend.toFixed(2)}
           </div>
 
           <select
             value={activeSort}
             onChange={(e) => setActiveSort(e.target.value)}
-            className="bg-zinc-900 border border-zinc-700 text-white p-2 rounded text-sm outline-none w-full md:w-auto focus:border-[#06b6d4]"
+            className="bg-[#18181b] border border-[#27272a] text-white px-4 h-[36px] rounded text-[11px] outline-none w-full md:w-auto focus:border-[#06b6d4] font-mono"
           >
             <option>Score (High→Low)</option>
             <option>Deadline (Soonest)</option>
@@ -251,37 +236,46 @@ export default function LeadsView() {
             placeholder="Search address or name..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="bg-zinc-900 border border-zinc-700 text-white p-2 rounded text-sm outline-none w-full md:w-64 focus:border-[#06b6d4]"
+            className="bg-[#18181b] border border-[#27272a] text-white px-4 h-[36px] rounded text-[11px] outline-none w-full md:w-64 focus:border-[#06b6d4] font-mono"
           />
         </div>
       </div>
 
       {/* LEAD CARDS */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
         {isLoading ? (
             Array.from({ length: 6 }).map((_, idx) => (
-                <div key={idx} className="bg-zinc-800/50 animate-pulse border border-zinc-700 rounded-lg p-5 h-[320px]"></div>
+                <div key={idx} className="global-card animate-pulse rounded-xl p-5 h-[320px]"></div>
             ))
         ) : (
             <AnimatePresence>
             {filteredLeads.map(lead => {
-                const isTier1 = lead.priority_status === 'Tier 1';
-                const isTier2 = lead.priority_status === 'Tier 2';
+                let tierLabel = 'TIER 3';
+                let tierClass = 'tier-3-badge';
+                let borderColor = '#52525b';
+                let progressColor = '#52525b';
                 
-                const daysLeft = lead.days_until_deadline;
-                let daysClass = 'text-green-400';
-                if (daysLeft < 30) daysClass = 'text-red-400';
-                else if (daysLeft <= 60) daysClass = 'text-yellow-400';
-
-                let borderClass = isTier1 ? 'border-l-green-500 border-zinc-700' : isTier2 ? 'border-l-yellow-500 border-zinc-700' : 'border-l-zinc-500 border-zinc-700';
-                if (daysLeft !== null && daysLeft < 7) {
-                    borderClass += ' border-red-500 animate-pulse';
+                if (lead.priority_status === 'Tier 1' || lead.lead_score >= 75) {
+                  tierLabel = 'TIER 1';
+                  tierClass = 'tier-1-badge';
+                  borderColor = '#4ade80';
+                  progressColor = '#4ade80';
+                } else if (lead.priority_status === 'Tier 2' || (lead.lead_score >= 50 && lead.lead_score < 75)) {
+                  tierLabel = 'TIER 2';
+                  tierClass = 'tier-2-badge';
+                  borderColor = '#facc15';
+                  progressColor = '#facc15';
                 }
-
-                const ringColor = (daysLeft !== null && daysLeft < 30) ? '#f87171' : (lead.lead_score >= 75 ? '#22c55e' : lead.lead_score >= 50 ? '#eab308' : '#71717a');
-                const ringPulse = daysLeft !== null && daysLeft < 30 ? 'animate-pulse' : '';
                 
-                const badgeClass = isTier1 ? 'bg-green-900/50 text-green-400' : isTier2 ? 'bg-yellow-900/50 text-yellow-400' : 'bg-zinc-700 text-zinc-300';
+                const isTier1 = tierLabel === 'TIER 1';
+                const daysLeft = lead.days_until_deadline;
+                const isUrgent = daysLeft !== null && daysLeft < 30;
+
+                const circumference = 2 * Math.PI * 26; // ~163.36
+                const score = lead.lead_score || 0;
+                const strokeDashoffset = circumference - (score / 100) * circumference;
+                
+                const cardGlow = isTier1 ? { boxShadow: '0 4px 24px rgba(0,0,0,0.4), 0 0 20px rgba(91,33,182,0.3)' } : {};
 
                 return (
                 <motion.div
@@ -290,93 +284,90 @@ export default function LeadsView() {
                     initial="initial"
                     animate="animate"
                     exit="exit"
-                    className={`glass-panel border-y border-r border-l-4 ${borderClass} rounded-lg p-5 flex flex-col ${isTier1 ? 'animate-storm-front' : ''}`}
+                    style={{ borderLeft: `3px solid ${borderColor}`, ...cardGlow }}
+                    className={`global-card rounded-xl p-5 flex flex-col`}
                 >
                     {/* Top: Tier Badge & Score */}
-                    <div className="flex justify-between items-start mb-3">
-                    <div className="flex items-center space-x-2">
-                        <span className={`px-2 py-1 rounded text-xs font-bold ${badgeClass}`}>
-                        {lead.priority_status || 'TIER 3'}
-                        </span>
-                        {lead.skip_trace_status === 'COMPLETE' && (
-                        <span className="text-green-400 text-xs font-bold bg-green-900/30 px-2 py-1 rounded">TRACED ✓</span>
+                    <div className="flex justify-between items-start mb-4">
+                      <div className="flex flex-col space-y-2">
+                        <div className="flex items-center space-x-2">
+                          <span className={`tier-badge ${tierClass}`}>
+                            {tierLabel}
+                          </span>
+                          {lead.skip_trace_status === 'COMPLETE' && (
+                          <span className="text-green-400 text-[10px] font-mono font-bold bg-green-900/30 px-2 py-0.5 rounded uppercase">TRACED ✓</span>
+                          )}
+                          {lead.skip_trace_status === 'FAILED' && (
+                          <span className="text-red-400 text-[10px] font-mono font-bold bg-red-900/30 px-2 py-0.5 rounded uppercase">FAILED</span>
+                          )}
+                        </div>
+                        {isUrgent && (
+                          <div className="bg-red-500/20 text-red-400 border border-red-500/50 px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase animate-pulse w-max">
+                            URGENT DEADLINE
+                          </div>
                         )}
-                        {lead.skip_trace_status === 'FAILED' && (
-                        <span className="text-red-400 text-xs font-bold bg-red-900/30 px-2 py-1 rounded">FAILED</span>
-                        )}
-                    </div>
-                    
-                    <div className={`relative w-12 h-12 flex items-center justify-center ${ringPulse}`}>
-                        <svg className="absolute inset-0 w-full h-full transform -rotate-90">
-                            <circle cx="24" cy="24" r="20" stroke="#27272a" strokeWidth="4" fill="none" />
-                            <motion.circle 
-                                cx="24" cy="24" r="20" 
-                                stroke={ringColor} strokeWidth="4" fill="none" strokeDasharray="125.66" 
-                                initial={{ strokeDashoffset: 125.66 }}
-                                animate={{ strokeDashoffset: 125.66 - (125.66 * (lead.lead_score || 0) / 100) }}
-                                transition={{ duration: 1.5, ease: "easeOut" }}
-                            />
-                        </svg>
-                        <span className="text-lg font-bold text-white z-10">{lead.lead_score || 0}</span>
-                    </div>
-
+                      </div>
+                      
+                      <div className="relative w-[60px] h-[60px] flex items-center justify-center">
+                          <svg className="absolute inset-0 w-full h-full transform -rotate-90">
+                              <circle cx="30" cy="30" r="26" stroke="#27272a" strokeWidth="4" fill="none" />
+                              <motion.circle 
+                                  cx="30" cy="30" r="26" 
+                                  stroke={progressColor} strokeWidth="4" fill="none" 
+                                  strokeDasharray={circumference} 
+                                  initial={{ strokeDashoffset: circumference }}
+                                  animate={{ strokeDashoffset }}
+                                  transition={{ duration: 1.5, ease: "easeOut" }}
+                                  strokeLinecap="round"
+                              />
+                          </svg>
+                          <span className="text-[32px] font-bold font-mono text-[#06b6d4] z-10">{score}</span>
+                      </div>
                     </div>
 
                     {/* Address & Homeowner */}
                     <div className="mb-2">
-                    <h3 className="font-bold text-lg truncate">{lead.address}</h3>
-                    <p className="text-zinc-400 text-sm truncate">{lead.homeowner_name || 'Unknown Owner'}</p>
+                      <h3 className="font-bold text-[14px] text-white truncate">{lead.homeowner_name || 'Unknown Owner'}</h3>
+                      <p className="text-zinc-400 text-[12px] truncate">{lead.address}</p>
                     </div>
 
                     {/* Phone Numbers Display if Traced */}
                     {lead.skip_trace_status === 'COMPLETE' && lead.phone_numbers && lead.phone_numbers.length > 0 && (
-                    <div className="mb-2 bg-zinc-900 border border-zinc-700 p-2 rounded">
+                    <div className="mb-2 bg-[#09090b] border border-[#27272a] p-2 rounded-lg">
                         {lead.phone_numbers.slice(0, 2).map((ph, idx) => (
-                        <div key={idx} className="text-xs text-zinc-300 tracking-widest">
+                        <div key={idx} className="text-[11px] text-zinc-300 tracking-widest font-mono">
                             ***-***-{ph.number?.slice(-4)} <span className="text-zinc-500 ml-1">({ph.type || 'phone'})</span>
                         </div>
                         ))}
-                        {lead.phone_numbers.length > 2 && <div className="text-xs text-zinc-500 mt-1">+{lead.phone_numbers.length - 2} more...</div>}
+                        {lead.phone_numbers.length > 2 && <div className="text-[11px] text-zinc-500 mt-1">+{lead.phone_numbers.length - 2} more...</div>}
                     </div>
                     )}
 
                     {/* Archetype */}
-                    <div className="mb-2 italic text-zinc-400 text-sm">
+                    <div className="mb-3 italic text-zinc-500 text-[11px]">
                     {lead.lead_archetype || 'Unclassified'}
                     </div>
 
-                    {/* Urgency Flag */}
-                    {lead.urgency_flag && (
-                    <div className={`mb-2 text-xs font-bold ${lead.urgency_flag.includes('CRITICAL') ? 'text-red-400 animate-pulse' : 'text-yellow-400'}`}>
-                        {lead.urgency_flag}
-                    </div>
-                    )}
-
-                    {/* Deadline */}
-                    <div className={`mb-3 text-sm font-bold ${daysClass}`}>
-                    {daysLeft !== null && daysLeft !== undefined ? `${daysLeft} DAYS LEFT` : 'NO DEADLINE'}
-                    </div>
-
                     {/* Dynamic Pitch */}
-                    <div className="mb-4 text-[#06b6d4] text-xs italic line-clamp-2 leading-relaxed flex-grow">
+                    <div className="mb-4 text-[#06b6d4] text-[11px] italic leading-relaxed flex-grow overflow-hidden text-ellipsis line-clamp-2">
                     "{lead.dynamic_sales_pitch || 'No pitch generated.'}"
                     </div>
 
                     {/* Action Buttons */}
-                    <div className="flex space-x-2 mt-auto pt-4 border-t border-zinc-700">
+                    <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 mt-auto pt-4 border-t border-[#27272a]">
                     <button
                         disabled={!isTier1 || lead.skip_trace_status === 'IN_PROGRESS' || lead.skip_trace_status === 'COMPLETE'}
                         onClick={() => setSkipTraceModal({ isOpen: true, lead })}
-                        className={`flex-1 py-2 rounded text-xs font-bold transition-colors ${isTier1 && lead.skip_trace_status !== 'COMPLETE' && lead.skip_trace_status !== 'IN_PROGRESS'
-                        ? 'bg-zinc-950 text-[#06b6d4] border border-[#06b6d4] hover:bg-[#06b6d4] hover:text-black'
-                        : 'bg-zinc-900 text-zinc-600 cursor-not-allowed border border-zinc-800'
+                        className={`w-full py-2 rounded-lg text-[11px] font-mono font-bold transition-colors border ${isTier1 && lead.skip_trace_status !== 'COMPLETE' && lead.skip_trace_status !== 'IN_PROGRESS'
+                        ? 'bg-transparent text-[#4ade80] border-[#4ade80] hover:bg-[#4ade80]/10'
+                        : 'bg-transparent text-zinc-600 cursor-not-allowed border-zinc-800'
                         }`}
                     >
                         {lead.skip_trace_status === 'IN_PROGRESS' ? 'TRACING...' : 'SKIP TRACE'}
                     </button>
                     <button
                         onClick={() => openLeadDetails(lead)}
-                        className="flex-1 bg-zinc-700 hover:bg-zinc-600 text-white py-2 rounded text-xs font-bold transition-colors"
+                        className="w-full bg-transparent hover:bg-[#06b6d4]/10 text-[#06b6d4] py-2 rounded-lg text-[11px] font-mono font-bold transition-colors border border-[#06b6d4]"
                     >
                         VIEW DETAILS
                     </button>
@@ -388,7 +379,7 @@ export default function LeadsView() {
         )}
 
         {!isLoading && filteredLeads.length === 0 && (
-          <div className="col-span-1 md:col-span-3 p-12 text-center border-2 border-dashed border-zinc-800 rounded-lg flex flex-col items-center justify-center">
+          <div className="col-span-1 md:col-span-2 lg:col-span-3 p-12 text-center border-2 border-dashed border-[#27272a] rounded-xl flex flex-col items-center justify-center global-card">
             <svg className="w-16 h-16 text-zinc-600 mb-4" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 22V12h6v10" />
@@ -398,52 +389,7 @@ export default function LeadsView() {
         )}
       </div>
 
-      {/* SKIP TRACE AUDIT LOG PANEL */}
-      <div className="border border-[#06b6d4]/50 rounded-lg overflow-hidden bg-zinc-900">
-        <button
-          data-testid="skip-trace-log-toggle"
-          onClick={() => setIsLogOpen(!isLogOpen)}
-          className="w-full text-left p-4 bg-[#06b6d4]/10 hover:bg-[#06b6d4]/20 transition-colors flex justify-between items-center"
-        >
-          <span className="font-bold text-[#06b6d4]">SKIP TRACE AUDIT LOG</span>
-          <span className="text-[#06b6d4]">{isLogOpen ? '▼' : '▶'}</span>
-        </button>
 
-        {isLogOpen && (
-          <div className="p-4 overflow-x-auto">
-            <table data-testid="skip-trace-log" className="w-full text-sm text-left">
-              <thead className="text-zinc-500 border-b border-zinc-800">
-                <tr>
-                  <th className="p-3">Timestamp</th>
-                  <th className="p-3">Address</th>
-                  <th className="p-3">Phone Numbers Found</th>
-                  <th className="p-3">Cost</th>
-                  <th className="p-3">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-zinc-800">
-                {auditLogs.length === 0 ? (
-                  <tr>
-                    <td colSpan="5" className="p-6 text-center text-zinc-600">No logs found.</td>
-                  </tr>
-                ) : (
-                  auditLogs.map((log, i) => (
-                    <tr key={i} className="text-zinc-300">
-                      <td className="p-3">{new Date(log.requested_at).toLocaleString()}</td>
-                      <td className="p-3 truncate max-w-[200px]">{log.leads?.address || 'Unknown'}</td>
-                      <td className="p-3 font-bold text-[#06b6d4]">{log.result_count}</td>
-                      <td className="p-3 text-green-400">${log.cost_per_hit}</td>
-                      <td className="p-3">
-                        <span className="bg-green-900/30 text-green-400 px-2 py-1 rounded text-xs font-bold">COMPLETED</span>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
 
       {/* SKIP TRACE CONFIRMATION MODAL */}
       <AnimatePresence>
@@ -460,26 +406,26 @@ export default function LeadsView() {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-zinc-900 border border-[#06b6d4] w-full max-w-md rounded-lg shadow-2xl relative z-10 p-6"
+              className="global-card border border-[#06b6d4] w-full max-w-md rounded-xl relative z-10 p-6"
             >
-              <h2 className="text-xl font-bold text-white mb-4">INITIATE SKIP TRACE?</h2>
-              <div className="bg-zinc-950 p-4 rounded mb-4 text-sm font-mono space-y-2 border border-zinc-800">
+              <h2 className="text-xl font-bold text-white mb-4 font-mono">INITIATE SKIP TRACE?</h2>
+              <div className="bg-[#09090b] p-4 rounded-lg mb-4 text-sm font-mono space-y-2 border border-[#27272a]">
                 <p className="text-zinc-300">Address: <span className="text-white font-bold">{skipTraceModal.lead.address}</span></p>
                 <p className="text-zinc-300">Cost: <span className="text-green-400 font-bold">$0.02 per hit</span></p>
               </div>
-              <p className="text-zinc-400 text-sm mb-6">
+              <p className="text-zinc-400 text-[13px] mb-6">
                 This will query Batchleads.io and add phone numbers to this lead.
               </p>
-              <div className="flex space-x-3">
+              <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
                 <button
                   onClick={() => setSkipTraceModal({ isOpen: false, lead: null })}
-                  className="flex-1 bg-zinc-800 hover:bg-zinc-700 text-white py-2 rounded font-bold transition-colors text-sm"
+                  className="w-full bg-zinc-800 hover:bg-zinc-700 text-white py-3 rounded-lg font-bold transition-colors text-[13px] font-mono"
                 >
                   CANCEL
                 </button>
                 <button
                   onClick={confirmSkipTrace}
-                  className="flex-1 bg-[#06b6d4] hover:bg-cyan-400 text-black py-2 rounded font-bold transition-colors text-sm"
+                  className="w-full bg-[#06b6d4] hover:bg-cyan-400 text-black py-3 rounded-lg font-bold transition-colors text-[13px] font-mono"
                 >
                   CONFIRM — NAIL IT
                 </button>
@@ -505,24 +451,24 @@ export default function LeadsView() {
               initial={{ scale: 0.95, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: 20 }}
-              className="bg-zinc-950 border-2 border-[#06b6d4] w-full max-w-5xl h-[90vh] rounded-lg shadow-2xl relative z-10 flex flex-col overflow-hidden"
+              className="global-card border border-[#06b6d4] w-full max-w-5xl h-[90vh] rounded-xl relative z-10 flex flex-col overflow-hidden"
             >
               {/* Modal Header */}
-              <div className="flex justify-between items-center p-4 border-b border-zinc-800 bg-zinc-900">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 border-b border-[#27272a] bg-[#10101a] gap-4">
                 <div>
                   <h2 className="text-xl font-bold text-[#06b6d4]">{selectedLead.address}</h2>
                   <p className="text-zinc-400 text-sm">{selectedLead.homeowner_name || 'Unknown Owner'}</p>
                 </div>
 
                 {/* LEAD STATUS UPDATE */}
-                <div className="flex items-center space-x-4">
-                  <div className="flex flex-col">
-                    <label className="text-zinc-500 text-[10px] mb-1">STATUS</label>
+                <div className="flex items-end sm:items-center space-x-4 w-full sm:w-auto">
+                  <div className="flex flex-col w-full sm:w-auto">
+                    <label className="label-text mb-1">STATUS</label>
                     <select
                       data-testid="lead-status-dropdown"
                       value={selectedLead.lead_status || 'NEW'}
                       onChange={(e) => updateLeadStatus(e.target.value)}
-                      className="bg-zinc-800 text-white text-sm border border-zinc-700 p-1.5 rounded outline-none focus:border-[#06b6d4]"
+                      className="bg-[#18181b] text-white text-[13px] border border-[#27272a] px-3 h-[36px] rounded-lg outline-none focus:border-[#06b6d4] font-mono"
                     >
                       <option value="NEW">NEW</option>
                       <option value="CONTACTED">CONTACTED</option>
@@ -533,18 +479,18 @@ export default function LeadsView() {
                   </div>
 
                   {showProjectValueInput && (
-                    <div className="flex flex-col">
-                      <label className="text-zinc-500 text-[10px] mb-1">PROJECT VALUE ($)</label>
+                    <div className="flex flex-col w-full sm:w-auto">
+                      <label className="label-text mb-1">PROJECT VALUE ($)</label>
                       <div className="flex space-x-2">
                         <input
                           type="number"
                           value={projectValue}
                           onChange={(e) => setProjectValue(e.target.value)}
-                          className="bg-zinc-800 border border-zinc-700 text-white p-1.5 rounded text-sm w-24 outline-none focus:border-[#06b6d4]"
+                          className="bg-[#18181b] border border-[#27272a] text-white px-3 h-[36px] rounded-lg text-[13px] w-24 outline-none focus:border-[#06b6d4] font-mono"
                         />
                         <button
                           onClick={() => updateLeadStatus('SOLD')}
-                          className="bg-green-600 hover:bg-green-500 text-white px-2 rounded text-xs font-bold"
+                          className="bg-green-600 hover:bg-green-500 text-white px-3 rounded-lg text-[11px] font-bold font-mono h-[36px]"
                         >
                           SAVE
                         </button>
@@ -554,7 +500,7 @@ export default function LeadsView() {
 
                   <button
                     onClick={closeLeadDetails}
-                    className="ml-4 text-zinc-400 hover:text-white text-3xl font-light w-10 h-10 flex items-center justify-center rounded bg-zinc-800"
+                    className="ml-0 sm:ml-4 text-zinc-400 hover:text-white text-2xl font-light w-[36px] h-[36px] flex items-center justify-center rounded-lg bg-[#27272a]"
                   >
                     &times;
                   </button>
@@ -562,15 +508,15 @@ export default function LeadsView() {
               </div>
 
               {/* Modal Body */}
-              <div className="flex-1 overflow-y-auto p-6 grid grid-cols-1 lg:grid-cols-2 gap-8 custom-scrollbar">
+              <div className="flex-1 overflow-y-auto p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-2 gap-8 custom-log-scrollbar">
 
                 {/* LEFT COLUMN */}
                 <div className="space-y-8">
 
                   {/* Property Data */}
                   <section>
-                    <h3 className="text-zinc-500 font-bold text-sm mb-4 border-b border-zinc-800 pb-2">PROPERTY DATA</h3>
-                    <div className="grid grid-cols-2 gap-y-2 text-sm">
+                    <h3 className="section-header mb-4 border-b border-[#27272a] pb-2">PROPERTY DATA</h3>
+                    <div className="grid grid-cols-2 gap-y-2 text-[13px] font-mono">
                       <span className="text-zinc-400">Assessed Value:</span>
                       <span className="text-right">${selectedLead.assessed_value?.toLocaleString() || 'N/A'}</span>
                       <span className="text-zinc-400">Year Built:</span>
@@ -586,13 +532,13 @@ export default function LeadsView() {
 
                   {/* Phone Numbers Reveal */}
                   {selectedLead.phone_numbers && selectedLead.phone_numbers.length > 0 && (
-                    <section className="bg-zinc-900 border border-zinc-800 p-4 rounded-lg">
+                    <section className="bg-[#18181b] border border-[#27272a] p-4 rounded-lg">
                       <div className="flex justify-between items-center mb-4">
-                        <h3 className="text-zinc-400 font-bold text-sm">CONTACT INFO</h3>
+                        <h3 className="section-header">CONTACT INFO</h3>
                         {!phonesRevealed && (
                           <button
                             onClick={() => setPhonesRevealed(true)}
-                            className="bg-[#06b6d4] text-black px-3 py-1 rounded text-xs font-bold hover:bg-cyan-400"
+                            className="bg-[#06b6d4] text-black px-3 py-1 rounded text-[11px] font-bold hover:bg-cyan-400 font-mono"
                           >
                             REVEAL NUMBERS
                           </button>
@@ -601,11 +547,11 @@ export default function LeadsView() {
 
                       <div className="space-y-2 mb-4">
                         {selectedLead.phone_numbers.map((ph, idx) => (
-                          <div key={idx} className="flex justify-between bg-zinc-950 p-2 rounded border border-zinc-800">
-                            <span className="text-[#06b6d4] font-bold tracking-widest text-lg">
+                          <div key={idx} className="flex justify-between bg-[#09090b] p-2 rounded-lg border border-[#27272a]">
+                            <span className="text-[#06b6d4] font-bold tracking-widest text-lg font-mono">
                               {phonesRevealed ? ph.number : `***-***-${ph.number?.slice(-4)}`}
                             </span>
-                            <span className="text-zinc-500 text-xs uppercase">{ph.type || 'PHONE'}</span>
+                            <span className="text-zinc-500 text-[11px] uppercase font-mono">{ph.type || 'PHONE'}</span>
                           </div>
                         ))}
                       </div>
@@ -618,45 +564,47 @@ export default function LeadsView() {
 
                   {/* Images */}
                   <section>
-                    <h3 className="text-zinc-500 font-bold text-sm mb-4 border-b border-zinc-800 pb-2">SATELLITE IMAGES</h3>
-                    <div className="flex gap-4">
+                    <h3 className="section-header mb-4 border-b border-[#27272a] pb-2">SATELLITE IMAGES</h3>
+                    <div className="flex flex-col sm:flex-row gap-4">
                       {selectedLead.satellite_image_url ? (
-                        <img src={selectedLead.satellite_image_url} alt="Satellite Current" className="w-1/2 rounded border border-zinc-700 object-cover" />
+                        <img src={selectedLead.satellite_image_url} alt="Satellite Current" className="w-full sm:w-1/2 rounded-lg border border-[#27272a] object-cover" />
                       ) : (
-                        <div className="w-1/2 aspect-square bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-600 text-xs text-center p-4 rounded">No Current Image</div>
+                        <div className="w-full sm:w-1/2 aspect-square bg-[#18181b] border border-[#27272a] flex items-center justify-center text-zinc-600 text-[13px] text-center p-4 rounded-lg">No Current Image</div>
                       )}
                       {selectedLead.historical_image_url ? (
-                        <img src={selectedLead.historical_image_url} alt="Satellite Historical" className="w-1/2 rounded border border-zinc-700 object-cover" />
+                        <img src={selectedLead.historical_image_url} alt="Satellite Historical" className="w-full sm:w-1/2 rounded-lg border border-[#27272a] object-cover" />
                       ) : (
-                        <div className="w-1/2 aspect-square bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-600 text-xs text-center p-4 rounded">No Historical Image</div>
+                        <div className="w-full sm:w-1/2 aspect-square bg-[#18181b] border border-[#27272a] flex items-center justify-center text-zinc-600 text-[13px] text-center p-4 rounded-lg">No Historical Image</div>
                       )}
                     </div>
                   </section>
 
                   {/* Permit History */}
                   <section>
-                    <h3 className="text-zinc-500 font-bold text-sm mb-4 border-b border-zinc-800 pb-2">PERMIT HISTORY</h3>
+                    <h3 className="section-header mb-4 border-b border-[#27272a] pb-2">PERMIT HISTORY</h3>
                     {permits.length === 0 ? (
-                      <p className="text-zinc-600 text-sm">No permits found.</p>
+                      <p className="text-zinc-600 text-[13px] font-mono">No permits found.</p>
                     ) : (
-                      <table className="w-full text-xs text-left">
-                        <thead className="text-zinc-500 border-b border-zinc-800">
-                          <tr>
-                            <th className="py-2">Date</th>
-                            <th className="py-2">Type</th>
-                            <th className="py-2">Status</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-zinc-800 text-zinc-300">
-                          {permits.map(p => (
-                            <tr key={p.id}>
-                              <td className="py-2">{new Date(p.created_at).toLocaleDateString()}</td>
-                              <td className="py-2">{p.permit_type}</td>
-                              <td className="py-2">{p.status}</td>
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-[13px] text-left font-mono">
+                          <thead className="text-zinc-500 border-b border-[#27272a]">
+                            <tr>
+                              <th className="py-2 pr-4">Date</th>
+                              <th className="py-2 pr-4">Type</th>
+                              <th className="py-2">Status</th>
                             </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                          </thead>
+                          <tbody className="divide-y divide-[#27272a] text-zinc-300">
+                            {permits.map(p => (
+                              <tr key={p.id}>
+                                <td className="py-2 pr-4">{new Date(p.created_at).toLocaleDateString()}</td>
+                                <td className="py-2 pr-4">{p.permit_type}</td>
+                                <td className="py-2">{p.status}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
                     )}
                   </section>
                 </div>
@@ -666,11 +614,11 @@ export default function LeadsView() {
 
                   {/* AI Scoring Output */}
                   <section>
-                    <h3 className="text-zinc-500 font-bold text-sm mb-4 border-b border-zinc-800 pb-2">AI SCORING OUTPUT</h3>
-                    <div className="bg-zinc-900 p-4 rounded border border-[#06b6d4]/30 space-y-4 text-sm">
+                    <h3 className="section-header mb-4 border-b border-[#27272a] pb-2">AI SCORING OUTPUT</h3>
+                    <div className="bg-[#18181b] p-4 rounded-lg border border-[#06b6d4]/30 space-y-4 text-[13px] font-mono">
                       <div className="flex justify-between items-center">
                         <span className="text-zinc-400">Score:</span>
-                        <span className="text-2xl font-bold text-[#06b6d4]">{selectedLead.lead_score}</span>
+                        <span className="text-[24px] font-bold text-[#06b6d4]">{selectedLead.lead_score}</span>
                       </div>
                       <div>
                         <span className="text-zinc-400 block mb-1">Financial Profile:</span>
@@ -679,7 +627,7 @@ export default function LeadsView() {
                       {selectedLead.visual_analysis && (
                         <div>
                           <span className="text-zinc-400 block mb-1">Visual Analysis:</span>
-                          <pre className="bg-zinc-950 p-3 rounded text-zinc-300 text-xs overflow-x-auto border border-zinc-800">
+                          <pre className="bg-[#09090b] p-3 rounded-lg text-zinc-300 text-[11px] overflow-x-auto border border-[#27272a] custom-log-scrollbar">
                             {JSON.stringify(selectedLead.visual_analysis, null, 2)}
                           </pre>
                         </div>
@@ -689,16 +637,16 @@ export default function LeadsView() {
 
                   {/* Logs */}
                   <section>
-                    <h3 className="text-zinc-500 font-bold text-sm mb-4 border-b border-zinc-800 pb-2">COMMUNICATION LOGS</h3>
+                    <h3 className="section-header mb-4 border-b border-[#27272a] pb-2">COMMUNICATION LOGS</h3>
 
                     <div className="mb-4">
-                      <h4 className="text-xs text-zinc-400 mb-2 uppercase">Calls</h4>
+                      <h4 className="label-text mb-2">CALLS</h4>
                       {callLogs.length === 0 ? (
-                        <p className="text-zinc-600 text-xs">No calls logged.</p>
+                        <p className="text-zinc-600 text-[13px] font-mono">No calls logged.</p>
                       ) : (
-                        <div className="space-y-2 max-h-32 overflow-y-auto pr-2 custom-scrollbar">
+                        <div className="space-y-2 max-h-32 overflow-y-auto pr-2 custom-log-scrollbar">
                           {callLogs.map(log => (
-                            <div key={log.id} className="bg-zinc-900 p-2 rounded text-xs border border-zinc-800 flex justify-between">
+                            <div key={log.id} className="bg-[#18181b] p-2 rounded-lg text-[11px] border border-[#27272a] flex justify-between font-mono">
                               <span className="text-zinc-400">{new Date(log.created_at).toLocaleString()}</span>
                               <span className="text-white font-bold">{log.outcome}</span>
                             </div>
@@ -708,13 +656,13 @@ export default function LeadsView() {
                     </div>
 
                     <div>
-                      <h4 className="text-xs text-zinc-400 mb-2 uppercase">SMS</h4>
+                      <h4 className="label-text mb-2">SMS</h4>
                       {smsLogs.length === 0 ? (
-                        <p className="text-zinc-600 text-xs">No SMS logged.</p>
+                        <p className="text-zinc-600 text-[13px] font-mono">No SMS logged.</p>
                       ) : (
-                        <div className="space-y-2 max-h-32 overflow-y-auto pr-2 custom-scrollbar">
+                        <div className="space-y-2 max-h-32 overflow-y-auto pr-2 custom-log-scrollbar">
                           {smsLogs.map(log => (
-                            <div key={log.id} className="bg-zinc-900 p-2 rounded text-xs border border-zinc-800 flex justify-between">
+                            <div key={log.id} className="bg-[#18181b] p-2 rounded-lg text-[11px] border border-[#27272a] flex justify-between font-mono">
                               <span className="text-zinc-400">{new Date(log.created_at).toLocaleString()}</span>
                               <span className="text-white font-bold">{log.status}</span>
                             </div>

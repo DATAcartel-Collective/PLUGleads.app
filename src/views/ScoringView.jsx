@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { scoreLead } from '../lib/geminiScorer';
 import { fetchHistoricalImageAsBase64, fetchSatelliteImageAsBase64 } from '../lib/satelliteImageFetcher';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ROOFING_PHYSICS } from '../lib/roofingAnimations';
 
 export default function ScoringView() {
     const [tenantId, setTenantId] = useState('');
@@ -131,61 +133,78 @@ export default function ScoringView() {
         ? Math.round((currentBatchIndex / unscoredLeads.length) * 100)
         : 0;
 
+    const listContainer = {
+        hidden: { opacity: 0 },
+        show: {
+            opacity: 1,
+            transition: { staggerChildren: 0.05 }
+        }
+    };
+
     return (
-        <div className="p-6 pb-32">
+        <div className="p-4 sm:p-6 pb-32 max-w-7xl mx-auto font-mono text-white min-h-screen">
             {/* HEADER */}
-            <div className="mb-8 border-b border-zinc-800 pb-4">
-                <h1 className="text-2xl font-mono font-bold text-[#06b6d4]">PHASE 3 — AI SCORING ENGINE</h1>
-                <p className="text-zinc-400 font-mono text-sm">Gemini 1.5 Pro Multimodal Visual Analysis</p>
+            <div className="mb-8 border-b border-[#27272a] pb-4">
+                <h1 className="page-title mb-2">PHASE 3 — AI SCORING ENGINE</h1>
+                <p className="secondary-text">Gemini 1.5 Pro Multimodal Visual Analysis</p>
             </div>
 
             {/* CONFIGURATION INPUTS */}
             <div className="mb-8 grid grid-cols-1 md:grid-cols-3 gap-4">
-                <input
-                    type="text"
-                    placeholder="Tenant ID"
-                    value={tenantId}
-                    onChange={e => setTenantId(e.target.value)}
-                    data-testid="scoring-tenant-input"
-                    className="bg-zinc-900 border border-zinc-700 text-white p-2 rounded font-mono text-sm"
-                />
-                <input
-                    type="password"
-                    placeholder="Google Maps Static API Key"
-                    value={mapsApiKey}
-                    onChange={e => setMapsApiKey(e.target.value)}
-                    data-testid="maps-api-input"
-                    className="bg-zinc-900 border border-zinc-700 text-white p-2 rounded font-mono text-sm"
-                />
-                <input
-                    type="password"
-                    placeholder="Gemini API Key — or set VITE_GEMINI_API_KEY in .env"
-                    value={geminiApiKey}
-                    onChange={e => setGeminiApiKey(e.target.value)}
-                    data-testid="gemini-api-input"
-                    className="bg-zinc-900 border border-zinc-700 text-white p-2 rounded font-mono text-sm"
-                />
+                <div>
+                  <label className="block label-text mb-1">TENANT ID</label>
+                  <input
+                      type="text"
+                      placeholder="Tenant ID"
+                      value={tenantId}
+                      onChange={e => setTenantId(e.target.value)}
+                      data-testid="scoring-tenant-input"
+                      className="w-full bg-[#18181b] border border-[#27272a] text-white px-4 h-[44px] rounded-lg font-mono text-[13px] focus:border-[#06b6d4] outline-none transition-colors"
+                  />
+                </div>
+                <div>
+                  <label className="block label-text mb-1">GOOGLE MAPS API KEY</label>
+                  <input
+                      type="password"
+                      placeholder="Google Maps Static API Key"
+                      value={mapsApiKey}
+                      onChange={e => setMapsApiKey(e.target.value)}
+                      data-testid="maps-api-input"
+                      className="w-full bg-[#18181b] border border-[#27272a] text-white px-4 h-[44px] rounded-lg font-mono text-[13px] focus:border-[#06b6d4] outline-none transition-colors"
+                  />
+                </div>
+                <div>
+                  <label className="block label-text mb-1">GEMINI API KEY</label>
+                  <input
+                      type="password"
+                      placeholder="Gemini API Key"
+                      value={geminiApiKey}
+                      onChange={e => setGeminiApiKey(e.target.value)}
+                      data-testid="gemini-api-input"
+                      className="w-full bg-[#18181b] border border-[#27272a] text-white px-4 h-[44px] rounded-lg font-mono text-[13px] focus:border-[#06b6d4] outline-none transition-colors"
+                  />
+                </div>
             </div>
 
             {/* GSAP Drip-Edge progress bar (Always Mounted) */}
-            <div className="mb-6 bg-zinc-900 border border-zinc-800 p-4 rounded" data-testid="scoring-progress-bar">
-                <div className="flex justify-between items-center mb-2 font-mono text-sm">
-                    <span className="text-zinc-400">BATCH PROGRESS</span>
-                    <span className="text-[#06b6d4]">{progressPercent}%</span>
+            <div className="mb-6 global-card p-4 sm:p-6" data-testid="scoring-progress-bar">
+                <div className="flex justify-between items-center mb-2 font-mono text-[13px]">
+                    <span className="text-zinc-500 font-bold uppercase tracking-widest">BATCH PROGRESS</span>
+                    <span className="text-[#06b6d4] font-bold">{progressPercent}%</span>
                 </div>
-                <div className="h-2 bg-zinc-800 rounded overflow-hidden">
+                <div className="h-[4px] bg-[#27272a] rounded-full overflow-hidden">
                     <div
-                        className="h-full bg-[#06b6d4] transition-all duration-500 ease-out"
+                        className="h-full bg-[#06b6d4] transition-all duration-500 ease-out shadow-[0_0_10px_rgba(6,182,212,0.6)]"
                         style={{ width: `${progressPercent}%` }}
                     />
                 </div>
                 {isBatchScoring && currentBatchLead && (
-                    <div className="mt-2 text-xs font-mono text-[#06b6d4] animate-pulse">
+                    <div className="mt-4 text-[11px] font-mono text-[#06b6d4] animate-pulse">
                         SCORING: {currentBatchLead.address}...
                     </div>
                 )}
                 {batchComplete && (
-                    <div className="mt-2 text-xs font-mono text-green-400">
+                    <div className="mt-4 text-[11px] font-mono text-green-400 drop-shadow-[0_0_5px_rgba(74,222,128,0.5)]">
                         ✅ BATCH SCORING COMPLETE — {batchScoreCount} LEADS SCORED
                     </div>
                 )}
@@ -197,141 +216,167 @@ export default function ScoringView() {
                     onClick={handleBatchScore}
                     disabled={isBatchScoring || !tenantId || unscoredLeads.length === 0}
                     data-testid="batch-score-button"
-                    className="w-full bg-[#06b6d4] hover:bg-cyan-400 text-zinc-950 font-bold font-mono py-4 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className={`gradient-btn ${isBatchScoring || !tenantId || unscoredLeads.length === 0 ? 'opacity-50 cursor-not-allowed grayscale' : ''}`}
                 >
                     {isBatchScoring ? 'SCORING IN PROGRESS...' : 'SCORE ALL UNSCORED LEADS'}
                 </button>
             </div>
 
             {/* LEAD QUEUE */}
-            <div className="bg-zinc-900 border border-zinc-800 rounded overflow-hidden">
-                <table className="w-full text-left font-mono text-sm" data-testid="lead-score-queue">
-                    <thead className="bg-zinc-950 text-zinc-400">
-                        <tr>
-                            <th className="p-4 border-b border-zinc-800">Address</th>
-                            <th className="p-4 border-b border-zinc-800">State</th>
-                            <th className="p-4 border-b border-zinc-800">Assessed Value</th>
-                            <th className="p-4 border-b border-zinc-800">Storm Date</th>
-                            <th className="p-4 border-b border-zinc-800">Days Left</th>
-                            <th className="p-4 border-b border-zinc-800">Current Score</th>
-                            <th className="p-4 border-b border-zinc-800">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {leads.map(lead => {
-                            const state = scoringState[lead.id];
-                            const result = scoringResults[lead.id];
-                            const isExpanded = expandedLeadId === lead.id;
+            <div className="global-card overflow-hidden">
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left font-mono text-[13px] whitespace-nowrap min-w-[600px]" data-testid="lead-score-queue">
+                        <thead className="bg-[#10101a] text-[#06b6d4] border-b border-[#27272a]">
+                            <tr>
+                                <th className="p-4">Address</th>
+                                <th className="p-4">State</th>
+                                <th className="p-4">Assessed Value</th>
+                                <th className="p-4">Storm Date</th>
+                                <th className="p-4">Days Left</th>
+                                <th className="p-4">Current Score</th>
+                                <th className="p-4">Action</th>
+                            </tr>
+                        </thead>
+                        <motion.tbody variants={listContainer} initial="hidden" animate="show">
+                            <AnimatePresence>
+                            {leads.map(lead => {
+                                const state = scoringState[lead.id];
+                                const result = scoringResults[lead.id];
+                                const isExpanded = expandedLeadId === lead.id;
 
-                            return (
-                                <React.Fragment key={lead.id}>
-                                    <tr className="border-b border-zinc-800 hover:bg-zinc-800/50 transition-colors">
-                                        <td className="p-4">{lead.address}</td>
-                                        <td className="p-4">{lead.state}</td>
-                                        <td className="p-4">${lead.assessed_value?.toLocaleString() || 'N/A'}</td>
-                                        <td className="p-4">{lead.last_storm_date || 'N/A'}</td>
-                                        <td className="p-4">{lead.days_until_deadline || 'N/A'}</td>
-                                        <td className="p-4">
-                                            {lead.lead_score ? (
-                                                <div className="flex items-center space-x-2">
-                                                    <span className="text-[#06b6d4] font-bold">{lead.lead_score}</span>
-                                                    <span className="bg-zinc-800 px-2 py-1 rounded text-xs">{lead.priority_status}</span>
-                                                </div>
-                                            ) : '-'}
-                                        </td>
-                                        <td className="p-4">
-                                            {state === 'scoring' ? (
-                                                <div className="w-6 h-6 border-2 border-[#06b6d4] border-t-transparent rounded-full animate-spin"></div>
-                                            ) : state === 'success' ? (
-                                                <button
-                                                    onClick={() => setExpandedLeadId(isExpanded ? null : lead.id)}
-                                                    className="text-xs bg-zinc-800 hover:bg-zinc-700 text-white px-3 py-1 rounded transition-colors"
-                                                >
-                                                    {isExpanded ? 'HIDE RESULT' : 'VIEW RESULT'}
-                                                </button>
-                                            ) : (
-                                                <div className="flex flex-col space-y-1">
-                                                    <button
-                                                        onClick={() => handleScoreLead(lead)}
-                                                        disabled={isBatchScoring}
-                                                        className="bg-zinc-800 hover:bg-zinc-700 text-white px-3 py-1 rounded text-xs transition-colors disabled:opacity-50"
+                                let tierClass = 'tier-3-badge';
+                                let tierLabel = 'TIER 3';
+                                if (lead.priority_status === 'Tier 1' || lead.lead_score >= 75) {
+                                  tierClass = 'tier-1-badge';
+                                  tierLabel = 'TIER 1';
+                                } else if (lead.priority_status === 'Tier 2' || (lead.lead_score >= 50 && lead.lead_score < 75)) {
+                                  tierClass = 'tier-2-badge';
+                                  tierLabel = 'TIER 2';
+                                }
+
+                                return (
+                                    <React.Fragment key={lead.id}>
+                                        <motion.tr
+                                            variants={ROOFING_PHYSICS.bundleDrop}
+                                            className="storm-row border-b border-[#27272a] hover:bg-[#18181b] transition-colors"
+                                        >
+                                            <td className="p-4 truncate max-w-[200px]">{lead.address}</td>
+                                            <td className="p-4">{lead.state}</td>
+                                            <td className="p-4">${lead.assessed_value?.toLocaleString() || 'N/A'}</td>
+                                            <td className="p-4">{lead.last_storm_date || 'N/A'}</td>
+                                            <td className="p-4">{lead.days_until_deadline || 'N/A'}</td>
+                                            <td className="p-4">
+                                                {lead.lead_score ? (
+                                                    <div className="flex items-center space-x-2">
+                                                        <span className="text-[#06b6d4] font-bold text-lg">{lead.lead_score}</span>
+                                                        <span className={`tier-badge ${tierClass}`}>{tierLabel}</span>
+                                                    </div>
+                                                ) : '-'}
+                                            </td>
+                                            <td className="p-4">
+                                                {state === 'scoring' ? (
+                                                    <div className="w-6 h-6 border-2 border-[#06b6d4] border-t-transparent rounded-full animate-spin"></div>
+                                                ) : state === 'success' || lead.lead_score ? (
+                                                    <motion.button
+                                                        whileTap={ROOFING_PHYSICS.nailGunRecoil.whileTap}
+                                                        onClick={() => setExpandedLeadId(isExpanded ? null : lead.id)}
+                                                        className="text-[11px] bg-transparent border border-zinc-600 hover:border-[#06b6d4] hover:text-[#06b6d4] text-zinc-300 px-3 py-1.5 rounded-lg transition-colors font-bold tracking-widest uppercase"
                                                     >
-                                                        SCORE THIS LEAD
-                                                    </button>
-                                                    {state === 'error' && (
-                                                        <span className="text-red-400 text-[10px] break-words max-w-[150px]">
-                                                            {scoringErrors[lead.id]}
-                                                        </span>
-                                                    )}
-                                                </div>
-                                            )}
-                                        </td>
-                                    </tr>
-
-                                    {/* F. SCORE RESULT CARD */}
-                                    {isExpanded && result && (
-                                        <tr>
-                                            <td colSpan="7" className="p-0 border-b border-zinc-800">
-                                                <div className="bg-zinc-950 p-6 shadow-inner border-l-4 border-[#06b6d4]">
-                                                    <div className="flex justify-between items-start mb-4">
-                                                        <div>
-                                                            <span className="bg-[#06b6d4]/20 text-[#06b6d4] px-3 py-1 rounded text-xs font-bold uppercase tracking-wider">
-                                                                ARCHETYPE: {result.lead_archetype}
+                                                        {isExpanded ? 'HIDE RESULT' : 'VIEW RESULT'}
+                                                    </motion.button>
+                                                ) : (
+                                                    <div className="flex flex-col space-y-1">
+                                                        <motion.button
+                                                            whileTap={ROOFING_PHYSICS.nailGunRecoil.whileTap}
+                                                            onClick={() => handleScoreLead(lead)}
+                                                            disabled={isBatchScoring}
+                                                            className="bg-zinc-800 hover:bg-zinc-700 text-white px-3 py-1.5 rounded-lg text-[11px] font-bold tracking-widest uppercase transition-colors disabled:opacity-50"
+                                                        >
+                                                            SCORE LEAD
+                                                        </motion.button>
+                                                        {state === 'error' && (
+                                                            <span className="text-red-400 text-[10px] break-words max-w-[150px]">
+                                                                {scoringErrors[lead.id]}
                                                             </span>
-                                                        </div>
-                                                        <div className="bg-red-900/30 border border-red-500/50 text-red-400 px-3 py-1 rounded text-xs font-bold uppercase">
-                                                            {result.urgency_flag}
-                                                        </div>
+                                                        )}
                                                     </div>
+                                                )}
+                                            </td>
+                                        </motion.tr>
 
-                                                    <div className="mb-6">
-                                                        <p className="text-[#06b6d4] italic text-lg leading-relaxed border-l-2 border-[#06b6d4] pl-4">
-                                                            "{result.dynamic_sales_pitch}"
-                                                        </p>
-                                                    </div>
-
-                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                                        <div className="bg-zinc-900 p-4 rounded border border-zinc-800">
-                                                            <h4 className="text-zinc-500 text-xs mb-3 font-bold">VISUAL ANALYSIS SUMMARY</h4>
-                                                            <div className="space-y-2 text-sm text-zinc-300">
-                                                                <p><span className="text-zinc-500">Condition:</span> {result.visual_analysis?.roof_condition}</p>
-                                                                <p><span className="text-zinc-500">Exposure:</span> {result.visual_analysis?.exposure}</p>
-                                                                <p><span className="text-zinc-500">Changes:</span> {result.visual_analysis?.visual_changes_detected}</p>
-                                                                <p><span className="text-zinc-500">Wealth Markers:</span> {result.visual_analysis?.wealth_indicators?.join(', ') || 'None detected'}</p>
+                                        {/* F. SCORE RESULT CARD */}
+                                        {isExpanded && (result || lead.visual_analysis) && (
+                                            <motion.tr
+                                                initial={{ opacity: 0, height: 0 }}
+                                                animate={{ opacity: 1, height: 'auto' }}
+                                                exit={{ opacity: 0, height: 0 }}
+                                                transition={{ duration: 0.3 }}
+                                            >
+                                                <td colSpan="7" className="p-0 border-b border-[#27272a] bg-[#09090b]">
+                                                    <div className="p-6 shadow-inner border-l-[3px] border-[#06b6d4]">
+                                                        <div className="flex justify-between items-start mb-4">
+                                                            <div>
+                                                                <span className="bg-[#06b6d4]/20 text-[#06b6d4] px-3 py-1 rounded text-xs font-bold uppercase tracking-wider drop-shadow-[0_0_5px_rgba(6,182,212,0.3)]">
+                                                                    ARCHETYPE: {result?.lead_archetype || lead.lead_archetype}
+                                                                </span>
                                                             </div>
+                                                            {(result?.urgency_flag || lead.urgency_flag) && (
+                                                              <div className="bg-red-900/30 border border-red-500/50 text-red-400 px-3 py-1 rounded text-xs font-bold uppercase drop-shadow-[0_0_5px_rgba(239,68,68,0.3)]">
+                                                                  {result?.urgency_flag || lead.urgency_flag}
+                                                              </div>
+                                                            )}
                                                         </div>
 
-                                                        <div className="bg-zinc-900 p-4 rounded border border-zinc-800">
-                                                            <h4 className="text-zinc-500 text-xs mb-3 font-bold">FINANCIAL PROFILE SUMMARY</h4>
-                                                            <p className="text-sm text-zinc-300">
-                                                                {result.financial_profile}
+                                                        <div className="mb-6">
+                                                            <p className="text-[#06b6d4] italic text-sm leading-relaxed border-l-2 border-[#06b6d4] pl-4 bg-[#18181b] p-3 rounded-r-lg">
+                                                                "{result?.dynamic_sales_pitch || lead.dynamic_sales_pitch}"
                                                             </p>
                                                         </div>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    )}
-                                </React.Fragment>
-                            );
-                        })}
 
-                        {leads.length === 0 && (
-                            <tr>
-                                <td colSpan="7" className="p-12 text-center text-zinc-500 font-mono">
-                                    <div className="flex flex-col items-center justify-center">
-                                        <svg className="w-16 h-16 text-zinc-600 mb-4" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 22V12h6v10" />
-                                        </svg>
-                                        <span className="font-bold text-xl uppercase">NO LEADS TO SCORE</span>
-                                        <span className="text-sm mt-2">Enter Tenant ID to load unscored leads queue.</span>
-                                    </div>
-                                </td>
-                            </tr>
-                        )}
-                    </tbody>
-                </table>
+                                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                            <div className="global-card p-4 hover:border-[#06b6d4]/50 transition-colors">
+                                                                <h4 className="section-header mb-3">VISUAL ANALYSIS SUMMARY</h4>
+                                                                <div className="space-y-2 text-[13px] text-zinc-300">
+                                                                    <p><span className="text-zinc-500">Condition:</span> {result?.visual_analysis?.roof_condition || lead.visual_analysis?.roof_condition}</p>
+                                                                    <p><span className="text-zinc-500">Exposure:</span> {result?.visual_analysis?.exposure || lead.visual_analysis?.exposure}</p>
+                                                                    <p><span className="text-zinc-500">Changes:</span> {result?.visual_analysis?.visual_changes_detected || lead.visual_analysis?.visual_changes_detected}</p>
+                                                                    <p><span className="text-zinc-500">Wealth Markers:</span> {result?.visual_analysis?.wealth_indicators?.join(', ') || lead.visual_analysis?.wealth_indicators?.join(', ') || 'None detected'}</p>
+                                                                </div>
+                                                            </div>
+
+                                                            <div className="global-card p-4 hover:border-[#06b6d4]/50 transition-colors">
+                                                                <h4 className="section-header mb-3">FINANCIAL PROFILE SUMMARY</h4>
+                                                                <p className="text-[13px] text-zinc-300">
+                                                                    {result?.financial_profile || lead.financial_profile}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                            </motion.tr>
+                                        )}
+                                    </React.Fragment>
+                                );
+                            })}
+                            </AnimatePresence>
+
+                            {leads.length === 0 && (
+                                <motion.tr variants={ROOFING_PHYSICS.bundleDrop}>
+                                    <td colSpan="7" className="p-12 text-center text-zinc-500 font-mono">
+                                        <div className="flex flex-col items-center justify-center global-card max-w-lg mx-auto p-12">
+                                            <svg className="w-16 h-16 text-zinc-600 mb-4 animate-pulse" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M9 22V12h6v10" />
+                                            </svg>
+                                            <span className="font-bold text-xl uppercase tracking-widest text-[#06b6d4]/70 mb-2">NO LEADS TO SCORE</span>
+                                            <span className="text-[13px]">Enter Tenant ID to load unscored leads queue.</span>
+                                        </div>
+                                    </td>
+                                </motion.tr>
+                            )}
+                        </motion.tbody>
+                    </table>
+                </div>
             </div>
         </div>
     );

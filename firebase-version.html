@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PLUGleads - DATAcartel Intelligence</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Orbitron:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+    <style>
+        :root {
+            --dark-bg: #0a0a0f;
+            --dark-card: #10101a;
+            --cyan-ghost: #00ffff;
+            --cyan-glow: rgba(0, 255, 255, 0.2);
+            --border-color: rgba(0, 255, 255, 0.15);
+        }
+        
+        * { font-family: 'Poppins', sans-serif; }
+        body {
+            background-color: var(--dark-bg);
+            background-image:
+                linear-gradient(var(--border-color) 1px, transparent 1px),
+                linear-gradient(to right, var(--border-color) 1px, var(--dark-bg) 1px);
+            background-size: 20px 20px;
+            color: #e2e8f0;
+        }
+
+        .cyber-card {
+            background: var(--dark-card);
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+        
+        .cyber-card:hover {
+            border-color: var(--cyan-ghost);
+            box-shadow: 0 0 20px var(--cyan-glow);
+            transform: translateY(-4px);
+        }
+
+        .pulse-dot {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .glow-button {
+            box-shadow: 0 0 10px var(--cyan-glow);
+            transition: all 0.3s;
+        }
+        
+        .glow-button:hover {
+            box-shadow: 0 0 20px var(--cyan-glow), 0 0 40px var(--cyan-glow);
+            transform: translateY(-2px);
+        }
+
+        .scan-line {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .scan-line::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--cyan-ghost), transparent);
+            animation: scan 3s ease-in-out infinite;
+        }
+        
+        @keyframes scan {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        #particleCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.3;
+        }
+
+        .cyber-input {
+            background: rgba(16, 16, 26, 0.8);
+            border: 1px solid var(--border-color);
+            color: #e2e8f0;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            width: 100%;
+        }
+        
+        .cyber-input:focus {
+            outline: none;
+            border-color: var(--cyan-ghost);
+            box-shadow: 0 0 10px var(--cyan-glow);
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(0, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--cyan-ghost);
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="overflow-x-hidden">
+    <!-- Particle Canvas Background -->
+    <canvas id="particleCanvas"></canvas>
+
+    <!-- Login Screen -->
+    <div id="loginScreen" class="min-h-screen flex items-center justify-center relative z-10">
+        <div class="cyber-card rounded-lg p-8 max-w-md w-full mx-4 scan-line">
+            <div class="text-center mb-8">
+                <h1 class="text-4xl font-bold mb-2" style="font-family: 'Orbitron', sans-serif;">
+                    <span class="text-cyan-ghost">PLUGleads</span>
+                </h1>
+                <div class="text-cyan-ghost/60 text-sm tracking-widest mb-4">
+                    <span class="text-cyan-ghost">DATA</span><span class="text-white">cartel</span>
+                </div>
+                <div class="text-xl font-semibold text-cyan-ghost/80 mb-2">COLLECTIVE</div>
+                <p class="text-gray-400 text-sm">Roofing Lead Intelligence System</p>
+            </div>
+            
+            <div id="loginForm">
+                <input type="email" id="emailInput" placeholder="Email" class="cyber-input mb-3" autocomplete="email">
+                <input type="password" id="passwordInput" placeholder="Password" class="cyber-input mb-4" autocomplete="current-password">
+                
+                <button onclick="loginWithEmail()" class="w-full px-6 py-4 bg-cyan-ghost/10 border-2 border-cyan-ghost text-cyan-ghost rounded-lg hover:bg-cyan-ghost/20 transition-all glow-button font-semibold mb-3">
+                    <span id="loginButtonText">AUTHENTICATE</span>
+                    <span id="loginLoader" class="loading hidden"></span>
+                </button>
+                
+                <div class="text-center mb-4">
+                    <span class="text-gray-500 text-sm">OR</span>
+                </div>
+                
+                <button onclick="loginWithGoogle()" class="w-full flex items-center justify-center space-x-3 px-6 py-3 bg-dark-bg border border-border-color text-gray-300 rounded-lg hover:border-cyan-ghost/50 transition-all">
+                    <svg class="w-5 h-5" viewBox="0 0 24 24">
+                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                    </svg>
+                    <span class="font-medium">Sign in with Google</span>
+                </button>
+                
+                <div id="errorMessage" class="mt-4 p-3 bg-red-500/10 border border-red-500 rounded text-red-400 text-sm hidden"></div>
+            </div>
+            
+            <div class="mt-6 text-center">
+                <div class="text-xs text-gray-500">SECURE MULTI-USER ACCESS</div>
+                <div class="flex justify-center mt-2 space-x-1">
+                    <div class="w-2 h-2 bg-cyan-ghost rounded-full pulse-dot"></div>
+                    <div class="w-2 h-2 bg-cyan-ghost rounded-full pulse-dot" style="animation-delay: 0.3s;"></div>
+                    <div class="w-2 h-2 bg-cyan-ghost rounded-full pulse-dot" style="animation-delay: 0.6s;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div id="mainApp" style="display:none;" class="relative z-10">
+        <!-- Header -->
+        <header class="border-b border-border-color bg-dark-card/80 backdrop-blur-sm sticky top-0 z-50 scan-line">
+            <div class="max-w-7xl mx-auto px-4 py-4">
+                <div class="flex items-center justify-between flex-wrap gap-4">
+                    <div class="flex items-center space-x-4">
+                        <div class="text-2xl font-bold" style="font-family: 'Orbitron';">
+                            <span class="text-cyan-ghost">DATA</span><span class="text-white">cartel</span>
+                        </div>
+                        <div class="h-8 w-px bg-border-color"></div>
+                        <div class="text-lg text-cyan-ghost/80">PLUGleads</div>
+                    </div>
+
+                    <div class="flex items-center space-x-3 px-4 py-2 bg-dark-bg/50 border border-border-color rounded-lg">
+                        <div>
+                            <div id="userName" class="text-sm font-semibold text-white"></div>
+                            <div id="userEmail" class="text-xs text-gray-400"></div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center space-x-3">
+                        <button onclick="showImportModal()" class="px-6 py-2 bg-cyan-ghost/10 border border-cyan-ghost text-cyan-ghost rounded-lg hover:bg-cyan-ghost/20 transition-all glow-button font-semibold">
+                            IMPORT LEADS
+                        </button>
+                        <button onclick="logout()" class="px-4 py-2 border border-gray-600 text-gray-400 rounded-lg hover:border-cyan-ghost/50 hover:text-cyan-ghost transition-all">
+                            EXIT
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Compact Stats -->
+        <div class="border-b border-border-color bg-dark-card/50 backdrop-blur-sm">
+            <div class="max-w-7xl mx-auto px-4 py-3">
+                <div class="flex items-center justify-between text-sm flex-wrap gap-4">
+                    <div class="flex space-x-6">
+                        <div class="flex items-center space-x-2">
+                            <div class="w-2 h-2 bg-cyan-ghost rounded-full pulse-dot"></div>
+                            <span class="text-gray-400">TOTAL:</span>
+                            <span id="totalCount" class="font-bold text-cyan-ghost">0</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <div class="w-2 h-2 bg-green-500 rounded-full"></div>
+                            <span class="text-gray-400">NEW:</span>
+                            <span id="newCount" class="font-bold text-green-400">0</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <div class="w-2 h-2 bg-blue-500 rounded-full"></div>
+                            <span class="text-gray-400">CONTACTED:</span>
+                            <span id="contactedCount" class="font-bold text-blue-400">0</span>
+                        </div>
+                    </div>
+                    
+                    <div class="flex space-x-2">
+                        <select id="filterType" onchange="filterLeads()" class="cyber-input px-3 py-1 rounded text-sm">
+                            <option value="">ALL TYPES</option>
+                            <option value="investor">INVESTOR</option>
+                            <option value="hail">HAIL ZONE</option>
+                            <option value="portfolio">PORTFOLIO</option>
+                        </select>
+                        <select id="filterStatus" onchange="filterLeads()" class="cyber-input px-3 py-1 rounded text-sm">
+                            <option value="">ALL STATUS</option>
+                            <option value="new">NEW</option>
+                            <option value="contacted">CONTACTED</option>
+                            <option value="quoted">QUOTED</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lead Cards -->
+        <div class="max-w-7xl mx-auto px-4 py-6">
+            <div id="leadsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Cards will be inserted here -->
+            </div>
+            
+            <div id="emptyState" class="text-center py-20">
+                <div class="text-6xl mb-4 opacity-50">⚡</div>
+                <h3 class="text-xl font-semibold text-gray-300 mb-2">NO LEADS DETECTED</h3>
+                <p class="text-gray-500 mb-6">Initialize data stream to begin</p>
+                <button onclick="showImportModal()" class="px-6 py-3 bg-cyan-ghost/10 border border-cyan-ghost text-cyan-ghost rounded-lg hover:bg-cyan-ghost/20 transition-all glow-button font-semibold">
+                    IMPORT LEADS
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Import Modal -->
+    <div id="importModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center z-50">
+        <div class="cyber-card rounded-lg max-w-2xl w-full mx-4 p-6">
+            <div class="flex justify-between items-center mb-6 scan-line pb-4">
+                <h2 class="text-2xl font-bold text-cyan-ghost" style="font-family: 'Orbitron';">DATA IMPORT</h2>
+                <button onclick="hideImportModal()" class="text-gray-400 hover:text-cyan-ghost transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            
+            <div class="space-y-6">
+                <div>
+                    <label class="block text-sm font-semibold text-cyan-ghost/80 mb-3 tracking-wide">UPLOAD CSV FILE</label>
+                    <div id="dropZone" class="border-2 border-dashed border-border-color rounded-lg p-12 text-center hover:border-cyan-ghost transition-all cursor-pointer">
+                        <input type="file" id="fileInput" accept=".csv" class="hidden" onchange="handleFileUpload(event)">
+                        <div class="text-6xl mb-4 opacity-50">📊</div>
+                        <p class="text-lg font-semibold text-gray-300 mb-2">DRAG & DROP OR CLICK</p>
+                        <p class="text-sm text-gray-500">CSV from NOAA / PropWire</p>
+                    </div>
+                </div>
+                
+                <div class="bg-cyan-ghost/5 border border-cyan-ghost/30 rounded-lg p-4">
+                    <p class="text-sm text-cyan-ghost/80">
+                        <strong class="text-cyan-ghost">REQUIRED:</strong> Address, City, State<br>
+                        <strong class="text-cyan-ghost">OPTIONAL:</strong> Owner, Phone, Value, Equity, Type
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // FIREBASE CONFIG - REPLACE WITH YOUR OWN
+        // ==========================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyAa10YRjCSTU9ctTwDrnY_tI1tsu3OdU-c",
+            authDomain: "plugleads-core.firebaseapp.com",
+            projectId: "plugleads-core",
+            storageBucket: "plugleads-core.firebasestorage.app",
+            messagingSenderId: "724817468150",
+            appId: "1:724817468150:web:5f51f8844fe635970cead7"
+        };
+        
+        // Initialize Firebase
+        let app, auth, db;
+        try {
+            app = firebase.initializeApp(firebaseConfig);
+            auth = firebase.auth();
+            db = firebase.firestore();
+        } catch(e) {
+            console.error('Firebase init failed - using demo mode:', e);
+            // Demo mode fallback
+        }
+
+        // ==========================================
+        // PARTICLE ANIMATION
+        // ==========================================
+        const canvas = document.getElementById('particleCanvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const particles = [];
+        for (let i = 0; i < 50; i++) {
+            particles.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                vx: (Math.random() - 0.5) * 0.5,
+                vy: (Math.random() - 0.5) * 0.5,
+                size: Math.random() * 2
+            });
+        }
+
+        function animateParticles() {
+            ctx.fillStyle = 'rgba(10, 10, 15, 0.05)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.fillStyle = '#00ffff';
+            ctx.strokeStyle = '#00ffff';
+            
+            particles.forEach((p, i) => {
+                p.x += p.vx;
+                p.y += p.vy;
+                
+                if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+                if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+                
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+                
+                particles.forEach((p2, j) => {
+                    if (i !== j) {
+                        const dx = p.x - p2.x;
+                        const dy = p.y - p2.y;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+                        
+                        if (dist < 100) {
+                            ctx.globalAlpha = (100 - dist) / 100 * 0.2;
+                            ctx.beginPath();
+                            ctx.moveTo(p.x, p.y);
+                            ctx.lineTo(p2.x, p2.y);
+                            ctx.stroke();
+                            ctx.globalAlpha = 1;
+                        }
+                    }
+                });
+            });
+            
+            requestAnimationFrame(animateParticles);
+        }
+        
+        animateParticles();
+        window.onresize = () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        };
+
+        // ==========================================
+        // STATE MANAGEMENT
+        // ==========================================
+        let currentUser = null;
+        let allLeads = [];
+        let filteredLeads = [];
+
+        // ==========================================
+        // AUTHENTICATION
+        // ==========================================
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.classList.remove('hidden');
+            setTimeout(() => errorDiv.classList.add('hidden'), 5000);
+        }
+
+        function showLoading(show) {
+            document.getElementById('loginButtonText').style.display = show ? 'none' : 'inline';
+            document.getElementById('loginLoader').classList.toggle('hidden', !show);
+        }
+
+        async function loginWithEmail() {
+            const email = document.getElementById('emailInput').value;
+            const password = document.getElementById('passwordInput').value;
+            
+            if (!email || !password) {
+                showError('Please enter email and password');
+                return;
+            }
+            
+            showLoading(true);
+            
+            try {
+                const result = await auth.signInWithEmailAndPassword(email, password);
+                currentUser = result.user;
+                onLoginSuccess();
+            } catch (error) {
+                showError(error.message);
+                showLoading(false);
+            }
+        }
+
+        async function loginWithGoogle() {
+            showLoading(true);
+            try {
+                const provider = new firebase.auth.GoogleAuthProvider();
+                const result = await auth.signInWithPopup(provider);
+                currentUser = result.user;
+                onLoginSuccess();
+            } catch (error) {
+                showError(error.message);
+                showLoading(false);
+            }
+        }
+
+        function onLoginSuccess() {
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('mainApp').style.display = 'block';
+            document.getElementById('userName').textContent = currentUser?.displayName || 'User';
+            document.getElementById('userEmail').textContent = currentUser?.email || '';
+            loadLeads();
+        }
+
+        function logout() {
+            if (auth) auth.signOut();
+            location.reload();
+        }
+
+        // Check if already logged in
+        if (auth) {
+            auth.onAuthStateChanged(user => {
+                if (user) {
+                    currentUser = user;
+                    onLoginSuccess();
+                }
+            });
+        }
+
+        // ==========================================
+        // LEAD MANAGEMENT
+        // ==========================================
+        async function loadLeads() {
+            if (!currentUser || !db) return;
+            
+            try {
+                const snapshot = await db.collection('leads')
+                    .where('userId', '==', currentUser.uid)
+                    .get();
+                
+                allLeads = snapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                }));
+                
+                if (allLeads.length === 0) {
+                    // First time - show empty state
+                    allLeads = [];
+                }
+                
+                filterLeads();
+            } catch (error) {
+                console.error('Load failed:', error);
+                allLeads = [];
+                filterLeads();
+            }
+        }
+
+        async function saveLead(lead) {
+            if (!currentUser || !db) return;
+            
+            try {
+                lead.userId = currentUser.uid;
+                lead.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+                
+                await db.collection('leads').add(lead);
+                await loadLeads();
+            } catch (error) {
+                console.error('Save failed:', error);
+            }
+        }
+
+        async function updateLead(id, updates) {
+            if (!db) return;
+            try {
+                await db.collection('leads').doc(id).update(updates);
+                await loadLeads();
+            } catch (error) {
+                console.error('Update failed:', error);
+            }
+        }
+
+        function filterLeads() {
+            const typeFilter = document.getElementById('filterType')?.value || '';
+            const statusFilter = document.getElementById('filterStatus')?.value || '';
+            
+            filteredLeads = allLeads.filter(lead => {
+                const matchType = !typeFilter || lead.type === typeFilter;
+                const matchStatus = !statusFilter || lead.status === statusFilter;
+                return matchType && matchStatus;
+            });
+            
+            renderLeads();
+            updateStats();
+        }
+
+        function renderLeads() {
+            const container = document.getElementById('leadsContainer');
+            const empty = document.getElementById('emptyState');
+            
+            if (filteredLeads.length === 0) {
+                container.style.display = 'none';
+                empty.style.display = 'block';
+                return;
+            }
+            
+            container.style.display = 'grid';
+            empty.style.display = 'none';
+            
+            container.innerHTML = filteredLeads
+                .sort((a, b) => b.priority - a.priority)
+                .map(createCard)
+                .join('');
+        }
+
+        function createCard(lead) {
+            const typeColors = {
+                investor: 'bg-blue-500/20 border-blue-500 text-blue-400',
+                hail: 'bg-cyan-500/20 border-cyan-500 text-cyan-400',
+                portfolio: 'bg-purple-500/20 border-purple-500 text-purple-400'
+            };
+            
+            const priorityColor = lead.priority >= 90 ? 'text-green-400' : lead.priority >= 70 ? 'text-yellow-400' : 'text-gray-400';
+            
+            return `
+                <div class="cyber-card rounded-lg p-5">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="flex-1">
+                            <h3 class="font-bold text-white text-xl mb-1">${lead.address}</h3>
+                            <p class="text-gray-400 text-sm">${lead.city}, ${lead.state}</p>
+                        </div>
+                        <div class="px-3 py-1 rounded-full font-bold ${priorityColor} border border-current">
+                            ${lead.priority}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <span class="px-3 py-1 rounded-full text-xs font-semibold border ${typeColors[lead.type] || 'bg-gray-500/20 border-gray-500 text-gray-400'}">
+                            ${(lead.type || 'OTHER').toUpperCase()}
+                        </span>
+                    </div>
+                    
+                    <div class="bg-cyan-ghost/5 border border-cyan-ghost/20 rounded-lg p-3 mb-4">
+                        <p class="text-xs font-semibold text-cyan-ghost mb-1">WHY QUALIFIED:</p>
+                        <p class="text-sm text-gray-300">${lead.reason || 'High-value prospect'}</p>
+                    </div>
+                    
+                    <div class="grid grid-cols-3 gap-3 mb-4 text-center">
+                        <div>
+                            <p class="text-xs text-gray-500">VALUE</p>
+                            <p class="text-sm font-bold text-cyan-ghost">$${lead.value ? (lead.value/1000).toFixed(0) : '0'}K</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500">EQUITY</p>
+                            <p class="text-sm font-bold text-green-400">${lead.equity || 0}%</p>
+                        </div>
+                        ${lead.roofAge ? `<div>
+                            <p class="text-xs text-gray-500">ROOF</p>
+                            <p class="text-sm font-bold text-orange-400">${lead.roofAge}yr</p>
+                        </div>` : '<div></div>'}
+                    </div>
+                    
+                    <div class="space-y-2">
+                        ${lead.phone ? `<a href="tel:${lead.phone}" class="block w-full px-4 py-3 bg-green-600 text-white rounded-lg text-center font-bold hover:bg-green-700 transition-all glow-button">
+                            📞 CALL NOW
+                        </a>` : ''}
+                        <button onclick="markContacted('${lead.id}')" class="w-full px-4 py-2 border border-cyan-ghost/50 text-cyan-ghost rounded-lg hover:bg-cyan-ghost/10 transition-all text-sm font-semibold">
+                            MARK CONTACTED
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function markContacted(id) {
+            updateLead(id, { status: 'contacted' });
+        }
+
+        function updateStats() {
+            document.getElementById('totalCount').textContent = allLeads.length;
+            document.getElementById('newCount').textContent = allLeads.filter(l => l.status === 'new').length;
+            document.getElementById('contactedCount').textContent = allLeads.filter(l => l.status === 'contacted').length;
+        }
+
+        // ==========================================
+        // CSV IMPORT
+        // ==========================================
+        function showImportModal() {
+            document.getElementById('importModal').classList.remove('hidden');
+            document.getElementById('importModal').classList.add('flex');
+        }
+
+        function hideImportModal() {
+            document.getElementById('importModal').classList.add('hidden');
+            document.getElementById('importModal').classList.remove('flex');
+        }
+
+        function setupDropZone() {
+            const zone = document.getElementById('dropZone');
+            const input = document.getElementById('fileInput');
+            
+            zone.onclick = () => input.click();
+            zone.ondragover = (e) => {
+                e.preventDefault();
+                zone.style.borderColor = 'var(--cyan-ghost)';
+            };
+            zone.ondragleave = () => {
+                zone.style.borderColor = 'var(--border-color)';
+            };
+            zone.ondrop = (e) => {
+                e.preventDefault();
+                zone.style.borderColor = 'var(--border-color)';
+                if (e.dataTransfer.files[0]) processFile(e.dataTransfer.files[0]);
+            };
+        }
+
+        function handleFileUpload(e) {
+            if (e.target.files[0]) processFile(e.target.files[0]);
+        }
+
+        async function processFile(file) {
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                const text = e.target.result;
+                const leads = parseCSV(text);
+                
+                for (const lead of leads) {
+                    await saveLead(lead);
+                }
+                
+                hideImportModal();
+                alert(`Imported ${leads.length} leads successfully!`);
+            };
+            reader.readAsText(file);
+        }
+
+        function parseCSV(text) {
+            const lines = text.split('\n');
+            const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+            
+            const leads = [];
+            for (let i = 1; i < lines.length; i++) {
+                if (!lines[i].trim()) continue;
+                
+                const values = lines[i].split(',');
+                const lead = {
+                    status: 'new',
+                    priority: 75
+                };
+                
+                headers.forEach((header, index) => {
+                    const value = values[index]?.trim();
+                    if (!value) return;
+                    
+                    if (header.includes('address')) lead.address = value;
+                    else if (header.includes('city')) lead.city = value;
+                    else if (header.includes('state')) lead.state = value;
+                    else if (header.includes('owner') || header.includes('name')) lead.owner = value;
+                    else if (header.includes('phone')) lead.phone = value.replace(/\D/g, '');
+                    else if (header.includes('value') || header.includes('price')) lead.value = parseInt(value.replace(/\D/g, ''));
+                    else if (header.includes('equity')) lead.equity = parseInt(value);
+                    else if (header.includes('type')) lead.type = value.toLowerCase();
+                    else if (header.includes('roof')) lead.roofAge = parseInt(value);
+                });
+                
+                if (lead.address && lead.city && lead.state) {
+                    lead.reason = lead.type === 'hail' ? 'Hail zone - potential insurance claim' : 'High-value prospect';
+                    leads.push(lead);
+                }
+            }
+            
+            return leads;
+        }
+
+        // Initialize
+        setupDropZone();
+    </script>
+</body>
+</html>

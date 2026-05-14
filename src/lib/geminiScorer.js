@@ -67,7 +67,8 @@ export async function scoreLead(lead, currentImageBase64, historicalImageBase64,
         const neighborhoodClusterCount = lead.neighborhood_roof_cluster_count || 0;
 
         const genAI = new GoogleGenerativeAI(apiKey);
-        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro', systemInstruction: SYSTEM_PROMPT });
+        const modelName = import.meta.env?.VITE_GEMINI_MODEL || 'gemini-2.5-pro';
+        const model = genAI.getGenerativeModel({ model: modelName, systemInstruction: SYSTEM_PROMPT });
 
         const parts = [
             { text: 'PROPERTY_DATA: ' + JSON.stringify(propertyData) },
@@ -89,7 +90,14 @@ export async function scoreLead(lead, currentImageBase64, historicalImageBase64,
         const responseText = result.response.text();
 
         // Strip markdown fences if present
-        const cleanJsonText = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
+        let cleanJsonText = responseText.replace(/```json/gi, '').replace(/```/g, '').trim();
+        
+        // Ensure we extract just the JSON object if there is trailing/leading text
+        const jsonStart = cleanJsonText.indexOf('{');
+        const jsonEnd = cleanJsonText.lastIndexOf('}');
+        if (jsonStart !== -1 && jsonEnd !== -1) {
+            cleanJsonText = cleanJsonText.substring(jsonStart, jsonEnd + 1);
+        }
 
         return JSON.parse(cleanJsonText);
     } catch (error) {
