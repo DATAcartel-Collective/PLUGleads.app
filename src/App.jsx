@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ROOFING_PHYSICS } from './lib/roofingAnimations';
-import AdminConsoleView from './views/AdminConsoleView';
+import IngestView from './views/IngestView';
+import HailView from './views/HailView';
+import ScoringView from './views/ScoringView';
 import LeadsView from './views/LeadsView';
 import DialerView from './views/DialerView';
 import CRMView from './views/CRMView';
@@ -46,11 +48,11 @@ export default function App() {
   }, []);
 
   if (!session) {
-    return <AuthView onLogin={() => {}} />;
+    return <AuthView onLogin={() => { }} />;
   }
 
-  const ALL_VIEWS = ['ADMIN', 'LEADS', 'DIALER', 'CRM'];
-  const REP_VIEWS = ['DIALER', 'CRM'];
+  const ALL_VIEWS = ['INGEST', 'CULLING', 'SCORING', 'LEADS', 'DIALER', 'CRM'];
+  const REP_VIEWS = ['LEADS', 'DIALER', 'CRM'];
   const visibleViews = userRole === 'ADMIN' ? ALL_VIEWS : REP_VIEWS;
 
   return (
@@ -75,7 +77,7 @@ export default function App() {
 
         <div className="flex items-center space-x-4">
           <div className={`w-[8px] h-[8px] rounded-full ${supabaseConnected ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`} title={supabaseConnected ? 'Supabase Connected' : 'Supabase Disconnected'} />
-          
+
           <button className="md:hidden text-zinc-400 p-1" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
           </button>
@@ -113,7 +115,9 @@ export default function App() {
             exit="exit"
             className="min-h-full"
           >
-            {activeView === 'ADMIN' && <AdminConsoleView />}
+            {activeView === 'INGEST' && <IngestView />}
+            {activeView === 'CULLING' && <HailView />}
+            {activeView === 'SCORING' && <ScoringView />}
             {activeView === 'LEADS' && <LeadsView />}
             {activeView === 'DIALER' && <DialerView />}
             {activeView === 'CRM' && <CRMView />}

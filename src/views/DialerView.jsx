@@ -169,7 +169,7 @@ export default function DialerView() {
 
         try {
             const genAI = new GoogleGenerativeAI(geminiApiKey);
-            const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+            const model = genAI.getGenerativeModel({ model: import.meta.env.VITE_GEMINI_FLASH_MODEL || 'gemini-1.5-flash' });
 
             const prompt = `Write a short, informal, friendly follow-up text message (under 160 characters) for a roofing contractor to send after a ${selectedOutcome} call with a homeowner. The homeowner's name is ${currentLead.homeowner_name}. The property is at ${currentLead.address}. Sales context: ${currentLead.dynamic_sales_pitch}. Keep it casual and genuine, not salesy.`;
 
